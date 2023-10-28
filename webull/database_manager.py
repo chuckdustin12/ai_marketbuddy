@@ -31,7 +31,7 @@ class DatabaseManager:
         return exists
     
 
-    async def create_table(self, df, table_name, unique_column):
+    async def create_table(self, df, table_name):
         print("Connected to the database.")
         dtype_mapping = {
             'int64': 'BIGINT',
@@ -39,12 +39,18 @@ class DatabaseManager:
             'object': 'TEXT',
             'bool': 'BOOLEAN',
             'datetime.date': 'TIMESTAMP',
-            'datetime.datetime': 'TIMESTAMP',  # Note the change here
+            'datetime.datetime': 'TIMESTAMP',
             'datetime64[ns]': 'timestamp',
             'datetime64[ms]': 'timestamp',
-            'datetime64[ns, US/Eastern]': 'TIMESTAMP WITH TIME ZONE'
+            'datetime64[ns, US/Eastern]': 'TIMESTAMP WITH TIME ZONE',
+            'string': 'TEXT'
         }
-        print(f"DataFrame dtypes: {df.dtypes}")
+
+        # Update dtype_mapping based on the data in the DataFrame
+        dtype_mapping = await self.update_dtype_mapping(df, dtype_mapping)
+
+        print(f"Updated DataFrame dtypes: {dtype_mapping}")
+
         # Check for large integers and update dtype_mapping accordingly
         for col, dtype in zip(df.columns, df.dtypes):
             if dtype == 'int64':
@@ -58,12 +64,9 @@ class DatabaseManager:
             table_exists = await connection.fetchval(f"SELECT to_regclass('{table_name}')")
             
             if table_exists is None:
-                unique_constraint = f'UNIQUE ({unique_column})' if unique_column else None
                 create_query = f"""
                 CREATE TABLE {table_name} (
-                    {', '.join(f'"{col}" {dtype_mapping[str(dtype)]}' for col, dtype in zip(df.columns, df.dtypes))},
-                    "insertion_timestamp" TIMESTAMP,
-                    {unique_constraint}
+                    {', '.join(f'"{col}" {dtype_mapping[str(dtype)]}' for col, dtype in zip(df.columns, df.dtypes))}
                 )
                 """
 
@@ -138,17 +141,13 @@ class DatabaseManager:
     async def batch_insert_dataframe(self, df, table_name, unique_columns, batch_size=250):
         async with lock:
             if not await self.table_exists(table_name):
-                await self.create_table(df, table_name, unique_columns)
-
-            # Debug: Print DataFrame columns before modifications
-            #print("Initial DataFrame columns:", df.columns.tolist())
-            
+                await self.create_table(df, table_name)
+                
             df = df.copy()
             df.dropna(inplace=True)
-
+            
             records = df.to_records(index=False)
             data = list(records)
-
 
             async with self.pool.acquire() as connection:
                 column_types = await connection.fetch(
@@ -203,12 +202,35 @@ class DatabaseManager:
                                 await connection.execute('ROLLBACK')
                                 raise
 
-                    if batch_data:  # Don't forget the last batch
-        
+                    if batch_data:  # Last batch
                         try:
-
                             await connection.executemany(insert_query, batch_data)
                         except Exception as e:
-                            print(f"An error occurred while inserting the record: {e}")
-                            await connection.execute('ROLLBACK')
-                        
+                            print(f"An error occurred while inserting the last batch: {e}")
+                            raise  # Transaction wil
+    async def update_dtype_mapping(self, df, dtype_mapping):
+        for col in df.columns:
+            non_null_values = df[col].dropna()
+            
+            # If dtype is object, inspect the elements to determine the actual type
+            if df[col].dtype == 'object':
+                if all(isinstance(x, str) for x in non_null_values.sample(min(10, len(non_null_values)))):
+                    dtype_mapping[col] = 'TEXT'
+                elif all(isinstance(x, list) for x in non_null_values.sample(min(10, len(non_null_values)))):
+                    dtype_mapping[col] = 'ARRAY'  # or whatever Postgres type you want to use
+                elif all(isinstance(x, dict) for x in non_null_values.sample(min(10, len(non_null_values)))):
+                    dtype_mapping[col] = 'JSONB'  # or JSON
+                # Add more conditions here
+                continue  # Skip the remaining checks for this column
+            
+            if all(isinstance(x, int) for x in non_null_values.sample(min(10, len(non_null_values)))):
+                dtype_mapping[col] = 'BIGINT'
+            elif all(isinstance(x, (float, np.float64)) for x in non_null_values.sample(min(10, len(non_null_values)))):
+                dtype_mapping[col] = 'DOUBLE PRECISION'
+            elif all(isinstance(x, bool) for x in non_null_values.sample(min(10, len(non_null_values)))):
+                dtype_mapping[col] = 'BOOLEAN'
+            elif all(isinstance(x, (pd.Timestamp, np.datetime64)) for x in non_null_values.sample(min(10, len(non_null_values)))):
+                dtype_mapping[col] = 'TIMESTAMP'
+            # Add more conditions here based on your specific needs
+
+        return dtype_mapping

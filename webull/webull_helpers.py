@@ -51,14 +51,14 @@ async def parse_total_top_options(data_entry):
         ticker_info = data.get('ticker', {})
         for key, value in ticker_info.items():
             if type(key) != list and key != 'exchangeTrade' and key != 'derivativeSupport':
-                parsed_data[f't_{key}'] = value
+                parsed_data[f'{key}'] = value
     
         # Parsing 'values' attributes
         values_info = data.get('values', {})
         for key, value in values_info.items():
 
             if type(key) != list and key != 'exchangeTrade' and key != 'derivativeSupport':
-                parsed_data[f'v_{key}'] = value
+                parsed_data[f'{key}'] = value
         
         all_parsed_data.append(parsed_data)
     if 't_sectype' in all_parsed_data:
@@ -77,7 +77,7 @@ async def parse_contract_top_options(data_entry):
         
         for key, value in belong_ticker_info.items():
             if type(key) != list and key != 'exchangeTrade' and key != 'derivativeSupport':
-                parsed_data[f'bt_{key}'] = value
+                parsed_data[f'{key}'] = value
 
        
         
@@ -85,13 +85,13 @@ async def parse_contract_top_options(data_entry):
         derivative_info = data.get('derivative', {})
         for key, value in derivative_info.items():
             if type(key) != list and key != 'exchangeTrade' and key != 'derivativeSupport':
-                parsed_data[f'd_{key}'] = value
+                parsed_data[f'{key}'] = value
         
         # Parsing 'values' attributes
         values_info = data.get('values', {})
         for key, value in values_info.items():
             if type(key) != list and key != 'exchangeTrade' and key != 'derivativeSupport':
-                parsed_data[f'v_{key}'] = value 
+                parsed_data[f'{key}'] = value 
 
         all_parsed_data.append(parsed_data)
     if 'bt_secType' in all_parsed_data:
@@ -164,6 +164,44 @@ async def parse_etfs(response):
             flattened_data.append(merged_info)
 
     return flattened_data
+
+# Define a function to parse the given data object with specific attributes under the parent key "item"
+async def parse_ipo_data(data):
+    """
+    Parses an IPO data object and returns a dictionary with relevant fields.
+
+    Args:
+    - item (dict): The IPO data item to parse.
+
+    Returns:
+    - dict: A dictionary containing parsed IPO data.
+    """
+    items = data['items']
+    all_parsed_data=[]
+    for item in items:
+        parsed_data = {
+            'ticker_id': item.get('tickerId', None),
+            'list_date': item.get('listDate', None),
+            'issue_up_limit': item.get('issueUpLimit', None),
+            'issue_price': item.get('issuePrice', None),
+            'currency_id': item.get('currencyId', None),
+            'exchange_code': item.get('disExchangeCode', None),
+            'symbol': item.get('disSymbol', None),
+            'ipo_status': item.get('ipoStatus', None),
+            'issue_currency_id': item.get('issueCurrencyId', None),
+            'issue_down_limit': item.get('issueDownLimit', None),
+            'issue_price_str': item.get('issuePriceStr', None),
+            'name': item.get('name', None),
+            'offering_type': item.get('offeringType', None),
+            'prospectus': item.get('prospectus', None),
+            'prospectus_publish_date': item.get('prospectusPublishDate', None),
+            'purchase_end_date': item.get('purchaseEndDate', None),
+            'purchase_start_date': item.get('purchaseStartDate', None),
+            'close_days': item.get('closeDays', 0)  # Assuming 0 if not present
+        }
+        all_parsed_data.append(parsed_data)
+    return all_parsed_data
+
 
 
 

@@ -6,7 +6,7 @@ import pandas as pd
 from pytz import timezone
 from .database_manager import DatabaseManager
 
-from .webull_helpers import parse_most_active, parse_total_top_options, parse_contract_top_options, parse_ticker_values, parse_forex, parse_etfs
+from .webull_helpers import parse_most_active, parse_total_top_options, parse_contract_top_options, parse_ticker_values, parse_ipo_data, parse_etfs
 
 class WebullMarkets(DatabaseManager):
     """General market data from webull"""
@@ -18,6 +18,7 @@ class WebullMarkets(DatabaseManager):
         self.top_option_types = ['totalVolume', 'totalPosition', 'volume', 'position', 'impVol', 'turnover']
         self.top_gainer_loser_types = ['afterMarket', 'preMarket', '5min', '1d', '5d', '1m', '3m', '52w']
         self.etf_types = ['industry', 'index', 'commodity', 'other']
+        self.high_and_low_types = ['newHigh', 'newLow', 'nearHigh', 'nearLow']
 
        
 
@@ -77,6 +78,7 @@ class WebullMarkets(DatabaseManager):
         else:
             total_data = await parse_contract_top_options(data)
             df= pd.DataFrame(total_data)
+            
     
         if as_dataframe == False:
             return total_data
@@ -84,18 +86,35 @@ class WebullMarkets(DatabaseManager):
         df['rank_type'] = rank_type
         df.to_csv(f'data/top_options/top_options_{rank_type}.csv', index=False)
         df.columns = df.columns.str.lower()
+        df = df.drop(columns=['dt', 'sectype', 'fatradetime', 'tradetime', 'trdstatus', 'status', 'template'])
         if self.connection_string is not None:
-            if 'bt_sectype' in df.columns:
-                df.drop(['bt_sectype'], axis=1, inplace=True)
-            elif 't_sectype' in df.columns:
-                df.drop(['t_sectype'], axis=1, inplace=True)
-            elif 't_derivativesupport' in df.columns:
-                df.drop(['t_derivativesupport', 't_tradetime', 't_exchangetrade'], axis=1, inplace=True)
-            elif 'bt_derivativesupport' in df.columns:
-                df.drop(['bt_derivativesupport', 'bt_exchangetrade'], axis=1, inplace=True)
+            df['totalasset'] = df['totalasset'].astype(float)
+            df['netasset'] = df['netasset'].astype(float)
+            df['implvol'] = df['implvol'].astype(float)
+            df['position'] = df['position'].astype(float)
+            df['middleprice'] = df['middleprice'].astype(float)
+            df['turnover'] = df['turnover'].astype(float)
+            df['positionchange'] = df['positionchange'].astype(float)
+            df['unsymbol'] = df['unsymbol'].astype('string')
+            df['strikeprice'] = df['strikeprice'].astype(float)
+            df['price'] = df['price'].astype(float)
+            df['direction'] = df['direction'].astype('string')
+            # Convert columns to float
+            float_columns = ['close', 'change', 'changeratio', 'marketvalue', 'volume', 'turnoverrate',
+                            'pettm', 'preclose', 'fiftytwowkhigh', 'fiftytwowklow', 'open', 'high', 
+                            'low', 'vibrateratio', 'pchratio', 'pprice', 'pchange']
+            df[float_columns] = df[float_columns].astype(float)
+
+    
+          
+     
+
+  
+ 
+            await self.connect()
             await self.batch_insert_dataframe(df, table_name=f'top_options_{rank_type.lower()}', unique_columns='insertion_timestamp')
 
-
+        
         return df
 
 
@@ -312,3 +331,49 @@ class WebullMarkets(DatabaseManager):
 
         return results
 
+
+    async def highs_and_lows(self, type:str='newLow', pageSize:str='200', as_dataframe:bool=True):
+        """
+        TYPES:
+
+        >>> newLow
+        >>> newHigh
+        >>> nearHigh
+        >>> nearLow
+        """
+        endpoint = f"https://quotes-gw.webullfintech.com/api/wlas/ranking/52weeks?regionId=6&rankType={type}&pageIndex=1&pageSize={pageSize}"
+        datas = await self.fetch_endpoint(endpoint)
+
+        data = await parse_ticker_values(datas)
+
+        if as_dataframe == False:
+            return data
+        
+        df = pd.DataFrame(data)
+        df.to_csv(f'data/highs_and_lows/{type}.csv', index=False)
+        df.columns = df.columns.str.lower()
+        return df
+        
+    async def ipos(self, type:str='filing', as_dataframe:bool=True):
+        """
+        TYPES:
+
+        >>> filing
+        >>> pricing
+        
+        """
+        endpoint = f"https://quotes-gw.webullfintech.com/api/bgw/ipo/listIpo?regionId=6&status={type}&includeBanner=true"
+        datas = await self.fetch_endpoint(endpoint)
+        data = await parse_ipo_data(datas)
+
+        if as_dataframe == False:
+            return data
+        
+        df = pd.DataFrame(data)
+        df.columns = df.columns.str.lower()
+        df.to_csv(f'data/ipos/ipo_list_{type}.csv')
+
+        return df
+    
+
+    
