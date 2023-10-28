@@ -1,9 +1,11 @@
 import asyncio
 
 from webull.webull_markets import WebullMarkets
+import os
 
+connection_string = os.environ.get('CONNECTION_STRING')
 
-markets = WebullMarkets()
+markets = WebullMarkets(connection_string)
 
 
 async def all_market_functions():

@@ -1,12 +1,19 @@
+import os
+connection_string = os.environ.get('CONNECTION_STRING')
 import aiohttp
 import asyncio
 import pandas as pd
 from pytz import timezone
+from .database_manager import DatabaseManager
+
 from .webull_helpers import parse_most_active, parse_total_top_options, parse_contract_top_options, parse_ticker_values, parse_forex, parse_etfs
 
-class WebullMarkets:
+class WebullMarkets(DatabaseManager):
     """General market data from webull"""
-    def __init__(self):
+    def __init__(self, connection_string=None, pool=None):
+
+        self.pool = pool
+        self.connection_string = connection_string
         self.most_active_types = ['rvol10d', 'turnoverRatio', 'volume', 'range']
         self.top_option_types = ['totalVolume', 'totalPosition', 'volume', 'position', 'impVol', 'turnover']
         self.top_gainer_loser_types = ['afterMarket', 'preMarket', '5min', '1d', '5d', '1m', '3m', '52w']
@@ -64,13 +71,31 @@ class WebullMarkets:
         data = datas['data']
         if 'total' in rank_type:
             total_data = await parse_total_top_options(data)
+            df = pd.DataFrame(total_data)
+            
+      
         else:
             total_data = await parse_contract_top_options(data)
+            df= pd.DataFrame(total_data)
+    
         if as_dataframe == False:
             return total_data
-        df = pd.DataFrame(total_data)
+        
         df['rank_type'] = rank_type
         df.to_csv(f'data/top_options/top_options_{rank_type}.csv', index=False)
+        df.columns = df.columns.str.lower()
+        if self.connection_string is not None:
+            if 'bt_sectype' in df.columns:
+                df.drop(['bt_sectype'], axis=1, inplace=True)
+            elif 't_sectype' in df.columns:
+                df.drop(['t_sectype'], axis=1, inplace=True)
+            elif 't_derivativesupport' in df.columns:
+                df.drop(['t_derivativesupport', 't_tradetime', 't_exchangetrade'], axis=1, inplace=True)
+            elif 'bt_derivativesupport' in df.columns:
+                df.drop(['bt_derivativesupport', 'bt_exchangetrade'], axis=1, inplace=True)
+            await self.batch_insert_dataframe(df, table_name=f'top_options_{rank_type.lower()}', unique_columns='insertion_timestamp')
+
+
         return df
 
 
@@ -90,6 +115,11 @@ class WebullMarkets:
             return parsed_data
         df = pd.DataFrame(parsed_data)
         df['rank_type'] = rank_type
+        df.columns = df.columns.str.lower()
+        if self.connection_string is not None:
+
+            await self.connect()
+            await self.batch_insert_dataframe(df, table_name=f'most_active_{rank_type}', unique_columns='insertion_timestamp')
         df.to_csv(f'data/top_active/top_active_{rank_type}.csv', index=False)
         return df
 
@@ -131,7 +161,13 @@ class WebullMarkets:
             return parsed_data
        
         df = pd.DataFrame(parsed_data)
+        df.columns = df.columns.str.lower()
         df.to_csv('data/earnings/earnings_upcoming.csv', index=False)
+        df = df.rename(columns={'v_releasedate': 'release_date'})
+        if self.connection_string is not None:
+            await self.connect()
+            await self.batch_insert_dataframe(df, table_name='earnings', unique_columns='release_date')
+
         return df
 
 
@@ -163,8 +199,13 @@ class WebullMarkets:
         df['rank_type'] = rank_type
         df['gainer_type'] = 'topGainers'
 
+        df.columns = df.columns.str.lower()
         df.to_csv(f'data/top_gainers/top_gainers_{rank_type}.csv', index=False)
-
+        if self.connection_string is not None:
+            if 't_sectype' in df.columns:
+                df = df.drop(columns=['t_sectype'])
+            await self.connect()
+            await self.batch_insert_dataframe(df, table_name=f'top_gainers_{rank_type}', unique_columns='insertion_timestamp')
         return df
     
 
@@ -197,7 +238,12 @@ class WebullMarkets:
         df['gainer_type'] = 'topLosers'
 
         df.to_csv(f'data/top_losers/top_losers{rank_type}.csv', index=False)
-
+        df.columns = df.columns.str.lower()
+        if self.connection_string is not None:
+            if 't_sectype' in df.columns:
+                df.drop(['t_sectype'], axis=1, inplace=True)
+            await self.connect()
+            await self.batch_insert_dataframe(df, table_name=f'top_losers_{rank_type}', unique_columns='insertion_timestamp')
         return df
     
     async def get_all_gainers_losers(self, type:str='gainers'):
@@ -225,6 +271,12 @@ class WebullMarkets:
         df = pd.DataFrame(datas)
 
         df.to_csv('data/forex/forex_quotes.csv', index=False)
+        df.columns = df.columns.str.lower()
+        if self.connection_string is not None:
+            if 't_sectype' in df.columns:
+                df.drop(['t_sectype'], axis=1, inplace=True)
+            await self.connect()
+            await self.batch_insert_dataframe(df, table_name='forex', unique_columns='insertion_timestamp')
         return df
     
     async def etf_finder(self, type:str='industry'):
@@ -244,6 +296,11 @@ class WebullMarkets:
         df = pd.DataFrame(data)
         df['type'] = type
         df.to_csv(f'data/etfs/etfs_{type}.csv', index=False)
+        df.columns = df.columns.str.lower()
+        if self.connection_string is not None:
+            df = df.drop(columns=['id', 'sectype', 'exchangetrade'])
+            await self.connect()
+            await self.batch_insert_dataframe(df, table_name=f'etfs_{type}', unique_columns='insertion_timestamp')
 
         return df
     
@@ -255,9 +312,3 @@ class WebullMarkets:
 
         return results
 
-markets = WebullMarkets()
-async def main():
-
-    etfs = await markets.etf_finder()
-    print(etfs)
-asyncio.run(main())
