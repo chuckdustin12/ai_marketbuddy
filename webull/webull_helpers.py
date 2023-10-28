@@ -1,4 +1,5 @@
 from datetime import datetime, timedelta
+import pytz
 
 async def parse_most_active(ticker_entry):
 
@@ -181,3 +182,18 @@ def convert_seconds_to_ms_eastern_time(seconds_timestamp):
 def convert_unix_to_eastern(unix_timestamp):
     eastern_time = datetime.fromtimestamp(unix_timestamp).strftime('%Y-%m-%d %H:%M:%S')
     return eastern_time
+
+
+def format_date(input_str):
+    # Parse the input string as a datetime object
+    input_datetime = datetime.fromisoformat(input_str.replace("Z", "+00:00"))
+
+    # Convert the datetime object to Eastern Time
+    utc_timezone = pytz.timezone("UTC")
+    eastern_timezone = pytz.timezone("US/Eastern")
+    input_datetime = input_datetime.astimezone(utc_timezone)
+    eastern_datetime = input_datetime.astimezone(eastern_timezone)
+
+    # Format the output string
+    output_str = eastern_datetime.strftime("%Y-%m-%d at %I:%M%p %Z")
+    return output_str

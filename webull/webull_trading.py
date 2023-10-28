@@ -1,7 +1,19 @@
 import aiohttp
-import asyncio
 import pandas as pd
 from pytz import timezone
+
+from .trade_models.capital_flow import CapitalFlow
+from .trade_models.cost_distribution import CostDistribution
+from .trade_models.etf_holdings import ETFHoldings
+from .trade_models.institutional_holdings import InstitutionHolding, InstitutionStat
+from .trade_models.financials import BalanceSheet, FinancialStatement, CashFlow
+from .trade_models.news import NewsItem
+from .trade_models.forecast_evaluator import ForecastEvaluator
+from .trade_models.short_interest import ShortInterest
+from .trade_models.volume_analysis import WebullVolAnalysis
+from .trade_models.ticker_query import WebullStockData
+from .trade_models.analyst_ratings import Analysis
+
 
 class WebullTrading:
     def __init__(self):
@@ -113,3 +125,111 @@ class WebullTrading:
             df['Ticker'] = symbol
             return df
         
+
+
+    async def get_stock_quote(self, ticker:str):
+        ticker_id = await self.get_ticker_id(ticker)
+
+        endpoint = f"https://quotes-gw.webullfintech.com/api/stock/tickerRealTime/getQuote?tickerId={ticker_id}&includeSecu=1&includeQuote=1&more=1"
+        datas = await self.fetch_endpoint(endpoint)
+
+        data = WebullStockData(datas)
+        return data
+
+
+    async def get_analyst_ratings(self, ticker:str):
+        ticker_id = await self.get_ticker_id(ticker)
+        endpoint=f"https://quotes-gw.webullfintech.com/api/information/securities/analysis?tickerId={ticker_id}"
+        datas = await self.fetch_endpoint(endpoint)
+        data = Analysis(datas)
+        return data
+    
+
+    async def get_short_interest(self, ticker:str):
+        ticker_id = await self.get_ticker_id(ticker)
+        endpoint = f"https://quotes-gw.webullfintech.com/api/information/brief/shortInterest?tickerId={ticker_id}"
+        datas = await self.fetch_endpoint(endpoint)
+        data = ShortInterest(datas)
+        return data
+    
+    async def institutional_holding(self, ticker:str):
+        ticker_id = await self.get_ticker_id(ticker)
+        endpoint = f"https://quotes-gw.webullfintech.com/api/information/stock/getInstitutionalHolding?tickerId={ticker_id}"
+        datas = await self.fetch_endpoint(endpoint)
+        data = InstitutionStat(datas)
+
+        return data
+    
+
+    async def volume_analysis(self, ticker:str):
+        ticker_id = await self.get_ticker_id(ticker)
+        endpoint = f"https://quotes-gw.webullfintech.com/api/stock/capitalflow/stat?count=10&tickerId={ticker_id}&type=0"
+        datas = await self.fetch_endpoint(endpoint)
+        data = WebullVolAnalysis(datas)
+        return data
+    
+
+    async def cost_distribution(self, ticker:str, start_date:str='2023-10-01', end_date:str='2023-10-27'):
+        ticker_id = await self.get_ticker_id(ticker)
+        endpoint = f"https://quotes-gw.webullfintech.com/api/quotes/chip/query?tickerId={ticker_id}&startDate={start_date}&endDate={end_date}"
+        datas = await self.fetch_endpoint(endpoint)
+        data = CostDistribution(datas)
+        return data
+    
+
+    async def stock_quote(self, ticker:str):
+        ticker_id = await self.get_ticker_id(ticker)
+        endpoint = f"https://quotes-gw.webullfintech.com/api/bgw/quote/realtime?ids={ticker_id}&includeSecu=1&delay=0&more=1"
+        datas = await self.fetch_endpoint(endpoint)
+        data = WebullStockData(datas)
+        return data
+    
+
+    async def news(self, ticker:str, pageSize:str='100'):
+        ticker_id = await self.get_ticker_id(ticker)
+        endpoint = f"https://nacomm.webullfintech.com/api/information/news/tickerNews?tickerId={ticker_id}&currentNewsId=0&pageSize={pageSize}"
+        datas = await self.fetch_endpoint(endpoint)
+        data = NewsItem(datas)
+        return data
+    
+
+    async def balance_sheet(self, ticker:str, limit:str='11'):
+        ticker_id = await self.get_ticker_id(ticker)
+        endpoint = f"https://quotes-gw.webullfintech.com/api/information/financial/balancesheet?tickerId={ticker_id}&type=101&fiscalPeriod=0&limit={limit}"
+        datas = await self.fetch_endpoint(endpoint)
+        data = BalanceSheet(datas)
+        return data
+    
+    async def cash_flow(self, ticker:str, limit:str='12'):
+        ticker_id = await self.get_ticker_id(ticker)
+        endpoint = f"https://quotes-gw.webullfintech.com/api/information/financial/cashflow?tickerId={ticker_id}&type=102&fiscalPeriod=1,2,3,4&limit={limit}"
+        datas = await self.fetch_endpoint(endpoint)
+        data = CashFlow(datas)
+        return data
+    
+    async def income_statement(self, ticker:str, limit:str='12'):
+        ticker_id = await self.get_ticker_id(ticker)
+        endpoint = f"https://quotes-gw.webullfintech.com/api/information/financial/incomestatement?tickerId={ticker_id}&type=102&fiscalPeriod=1,2,3,4&limit={limit}"
+        datas = await self.fetch_endpoint(endpoint)
+        data = FinancialStatement(datas)
+        return data
+    
+
+
+
+    async def capital_flow(self, ticker:str):
+        ticker_id = await self.get_ticker_id(ticker)
+        endpoint = f"https://quotes-gw.webullfintech.com/api/stock/capitalflow/ticker?tickerId={ticker_id}&showHis=true"
+        datas = await self.fetch_endpoint(endpoint)
+        data = CapitalFlow(datas)
+        return data
+    
+
+    async def etf_holdings(self, ticker:str, pageSize:str='200'):
+        ticker_id = await self.get_ticker_id(ticker)
+        endpoint = f"https://quotes-gw.webullfintech.com/api/information/company/queryEtfList?tickerId={ticker_id}&pageIndex=1&pageSize={pageSize}"
+        datas = await self.fetch_endpoint(endpoint)
+        data = ETFHoldings(datas)
+        return data
+    
+
