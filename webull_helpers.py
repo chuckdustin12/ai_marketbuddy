@@ -113,3 +113,32 @@ async def parse_ticker_values(data_entry):
         
         all_parsed_data.append(parsed_data)
     return all_parsed_data
+
+
+def parse_forex(ticker_list):
+    parsed_data_list = []
+    
+    for ticker_entry in ticker_list:
+        parsed_data = {}
+        
+        parsed_data['tickerId'] = ticker_entry.get('tickerId')
+        parsed_data['exchangeId'] = ticker_entry.get('exchangeId')
+        parsed_data['type'] = ticker_entry.get('type')
+        parsed_data['name'] = ticker_entry.get('name')
+        parsed_data['symbol'] = ticker_entry.get('symbol')
+        parsed_data['disSymbol'] = ticker_entry.get('disSymbol')
+        parsed_data['disExchangeCode'] = ticker_entry.get('disExchangeCode')
+        parsed_data['exchangeCode'] = ticker_entry.get('exchangeCode')
+        parsed_data['listStatus'] = ticker_entry.get('listStatus')
+        parsed_data['template'] = ticker_entry.get('template')
+        parsed_data['futuresSupport'] = ticker_entry.get('futuresSupport')
+        parsed_data['tradeTime'] = ticker_entry.get('tradeTime')
+        parsed_data['status'] = ticker_entry.get('status')
+        parsed_data['close'] = ticker_entry.get('close')
+        parsed_data['change'] = ticker_entry.get('change')
+        parsed_data['changeRatio'] = ticker_entry.get('changeRatio')
+        parsed_data['marketValue'] = ticker_entry.get('marketValue')
+        
+        parsed_data_list.append(parsed_data)
+    
+    return parsed_data_list

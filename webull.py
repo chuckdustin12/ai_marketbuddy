@@ -2,7 +2,7 @@ import aiohttp
 import asyncio
 import pandas as pd
 from pytz import timezone
-from webull_helpers import parse_most_active, parse_total_top_options, parse_contract_top_options, parse_ticker_values
+from webull_helpers import parse_most_active, parse_total_top_options, parse_contract_top_options, parse_ticker_values, parse_forex
 
 class Webull:
     def __init__(self):
@@ -39,6 +39,8 @@ class Webull:
         async with aiohttp.ClientSession(headers=self.headers) as session:
             async with session.get(endpoint) as resp:
                 return await resp.json()
+            
+
 
     async def get_ticker_id(self, symbol):
         """Converts ticker name to ticker ID to be passed to other API endpoints from Webull."""
@@ -287,11 +289,22 @@ class Webull:
             results = await asyncio.gather(*tasks)
             return results
 
+    async def get_forex(self):
+        endpoint = "https://quotes-gw.webullfintech.com/api/bgw/market/load-forex"
+        datas = await self.fetch_endpoint(endpoint)
 
+        df = pd.DataFrame(datas)
+
+        df.to_csv('data/forex/forex_quotes.csv', index=False)
+        return df
+    
+
+
+    
 
 wb = Webull()
 async def main():
 
-    top_active = await wb.get_all_gainers_losers('losers')
-    print(top_active)
+    forex = await wb.get_forex()
+    print(forex)
 asyncio.run(main())
