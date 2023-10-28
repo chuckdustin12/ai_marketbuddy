@@ -7,7 +7,7 @@ from langchain.chat_models import ChatOpenAI
 import os
 from helpers import convert_unix_to_eastern
 import requests
-from webull_endpoints import Webull
+from webull import Webull
 import asyncio
 api_key = os.environ.get('YOUR_OPENAI_KEY')
 

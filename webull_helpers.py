@@ -51,7 +51,7 @@ async def parse_most_active(ticker_entry):
 
 
 # Creating a function to parse each attribute of the data_entry and return it as a dictionary
-def parse_total_top_options(data_entry):
+async def parse_total_top_options(data_entry):
     all_parsed_data = []
     
     for data in data_entry:
@@ -70,7 +70,7 @@ def parse_total_top_options(data_entry):
 
 
 
-def parse_contract_top_options(data_entry):
+async def parse_contract_top_options(data_entry):
     all_parsed_data = []
     for data in data_entry:
         parsed_data = {}
@@ -94,3 +94,22 @@ def parse_contract_top_options(data_entry):
 
     return all_parsed_data
 
+
+
+# Creating a function to parse each attribute of the data_entry and return it as a dictionary
+async def parse_ticker_values(data_entry):
+    all_parsed_data = []
+    data_entry = data_entry.get('data', {})
+    for data in data_entry:
+        parsed_data = {}
+        ticker_info = data.get('ticker', {})
+        for key, value in ticker_info.items():
+            parsed_data[f'ticker_{key}'] = value
+    
+        # Parsing 'values' attributes
+        values_info = data.get('values', {})
+        for key, value in values_info.items():
+            parsed_data[f'values_{key}'] = value
+        
+        all_parsed_data.append(parsed_data)
+    return all_parsed_data

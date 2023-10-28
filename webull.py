@@ -2,12 +2,13 @@ import aiohttp
 import asyncio
 import pandas as pd
 from pytz import timezone
-from webull_helpers import parse_most_active, parse_total_top_options, parse_contract_top_options
+from webull_helpers import parse_most_active, parse_total_top_options, parse_contract_top_options, parse_ticker_values
 
 class Webull:
     def __init__(self):
         self.most_active_types = ['rvol10d', 'turnoverRatio', 'volume', 'range']
         self.top_option_types = ['totalVolume', 'totalPosition', 'volume', 'position', 'impVol', 'turnover']
+        self.top_gainer_loser_types = ['afterMarket', 'preMarket', '5min', '1d', '5d', '1m', '3m', '52w']
         self.timeframes = ['m1','m5', 'm10', 'm15', 'm20', 'm30', 'm60', 'm120', 'm240', 'd1']
         self.headers = {
         "App": "global",
@@ -67,9 +68,9 @@ class Webull:
         datas = await self.fetch_endpoint(endpoint)
         data = datas['data']
         if 'total' in rank_type:
-            total_data = parse_total_top_options(data)
+            total_data = await parse_total_top_options(data)
         else:
-            total_data = parse_contract_top_options(data)
+            total_data = await parse_contract_top_options(data)
         if as_dataframe == False:
             return total_data
         df = pd.DataFrame(total_data)
@@ -170,14 +171,127 @@ class Webull:
         >>> wb.most_active_types
         >>> wb.top_option_types
         """
+        if types == wb.top_option_types:
+            tasks = [wb.get_top_options(type) for type in types]
+            results = await asyncio.gather(*tasks)
 
-        tasks = [wb.get_top_options(type) for type in types]
-        results = await asyncio.gather(*tasks)
-        return results
+            return results
+        elif types == wb.most_active_types:
+            tasks = [wb.get_most_active(type) for type in types]
+            results = await asyncio.gather(*tasks)
+            return results           
+
+
+    async def earnings(self, start_date:str, pageSize: str='100', as_dataframe:str=True):
+        """
+        Pulls a list of earnings.
+
+        >>> Start Date: enter a start date in YYYY-MM-DD format.
+
+        >>> pageSize: enter the amount to be returned. default = 100
+
+        >>> as_dataframe: default returns as a pandas dataframe.
+        
+        """
+        endpoint = f"https://quotes-gw.webullfintech.com/api/bgw/explore/calendar/earnings?regionId=6&pageIndex=1&pageSize={pageSize}&startDate={start_date}"
+        datas = await self.fetch_endpoint(endpoint)
+        parsed_data = await parse_ticker_values(datas)
+        if as_dataframe == False:
+            return parsed_data
+       
+        df = pd.DataFrame(parsed_data)
+        df.to_csv('data/earnings/earnings_upcoming.csv', index=False)
+        return df
+
+
+    async def get_top_gainers(self, rank_type:str='1d', pageSize: str='100', as_dataframe:bool=True):
+        """
+        Rank Types:
+
+        >>> afterMarket
+        >>> preMarket
+        >>> 5min
+        >>> 1d (daily)
+        >>> 5d (5day)
+        >>> 1m (1month)
+        >>> 3m (3month)
+        >>> 52w (52 week)  
+
+        DEFAULT: 1d (daily) 
+
+
+        >>> PAGE SIZE:
+            Number of results to return. Default = 100     
+        """
+        endpoint = f"https://quotes-gw.webullfintech.com/api/bgw/market/topGainers?regionId=6&rankType={rank_type}&pageIndex=1&pageSize={pageSize}"
+        datas = await self.fetch_endpoint(endpoint)
+        parsed_data = await parse_ticker_values(datas)
+        if as_dataframe == False:
+            return parsed_data
+        df = pd.DataFrame(parsed_data)
+        df['rank_type'] = rank_type
+        df['gainer_type'] = 'topGainers'
+
+        df.to_csv(f'data/top_gainers/top_gainers_{rank_type}.csv', index=False)
+
+        return df
+    
+
+    async def get_top_losers(self, rank_type:str='1d', pageSize: str='100', as_dataframe:bool=True):
+        """
+        Rank Types:
+
+        >>> afterMarket
+        >>> preMarket
+        >>> 5min
+        >>> 1d (daily)
+        >>> 5d (5day)
+        >>> 1m (1month)
+        >>> 3m (3month)
+        >>> 52w (52 week)  
+
+        DEFAULT: 1d (daily) 
+
+
+        >>> PAGE SIZE:
+            Number of results to return. Default = 100     
+        """
+        endpoint = f"https://quotes-gw.webullfintech.com/api/bgw/market/dropGainers?regionId=6&rankType={rank_type}&pageIndex=1&pageSize={pageSize}"
+        datas = await self.fetch_endpoint(endpoint)
+        parsed_data = await parse_ticker_values(datas)
+        if as_dataframe == False:
+            return parsed_data
+        df = pd.DataFrame(parsed_data)
+        df['rank_type'] = rank_type
+        df['gainer_type'] = 'topLosers'
+
+        df.to_csv(f'data/top_losers/top_losers{rank_type}.csv', index=False)
+
+        return df
+    
+    async def get_all_gainers_losers(self, type:str='gainers'):
+        """TYPE OPTIONS:
+        >>> gainers - all gainers across all rank_types
+        >>> losers - all losers across all rank_types
+        
+        """
+        types = wb.top_gainer_loser_types
+        if type == 'gainers':
+            tasks = [self.get_top_gainers(type) for type in types]
+            results = await asyncio.gather(*tasks)
+            return results
+        
+
+        elif type == 'losers':
+            tasks =[self.get_top_losers(type) for type in types]
+            results = await asyncio.gather(*tasks)
+            return results
+
+
 
 wb = Webull()
 async def main():
 
-    top_active = await wb.get_all_rank_types(wb.top_option_types)
+    top_active = await wb.get_all_gainers_losers('losers')
     print(top_active)
 asyncio.run(main())
