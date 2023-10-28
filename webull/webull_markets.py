@@ -2,14 +2,18 @@ import aiohttp
 import asyncio
 import pandas as pd
 from pytz import timezone
-from webull_helpers import parse_most_active, parse_total_top_options, parse_contract_top_options, parse_ticker_values, parse_forex
+from .webull_helpers import parse_most_active, parse_total_top_options, parse_contract_top_options, parse_ticker_values, parse_forex, parse_etfs
 
-class Webull:
+class WebullMarkets:
+    """General market data from webull"""
     def __init__(self):
         self.most_active_types = ['rvol10d', 'turnoverRatio', 'volume', 'range']
         self.top_option_types = ['totalVolume', 'totalPosition', 'volume', 'position', 'impVol', 'turnover']
         self.top_gainer_loser_types = ['afterMarket', 'preMarket', '5min', '1d', '5d', '1m', '3m', '52w']
-        self.timeframes = ['m1','m5', 'm10', 'm15', 'm20', 'm30', 'm60', 'm120', 'm240', 'd1']
+        self.etf_types = ['industry', 'index', 'commodity', 'other']
+
+       
+
         self.headers = {
         "App": "global",
         "App-Group": "broker",
@@ -40,17 +44,6 @@ class Webull:
             async with session.get(endpoint) as resp:
                 return await resp.json()
             
-
-
-    async def get_ticker_id(self, symbol):
-        """Converts ticker name to ticker ID to be passed to other API endpoints from Webull."""
-        endpoint =f"https://quotes-gw.webullfintech.com/api/search/pc/tickers?keyword={symbol}&pageIndex=1&pageSize=1"
-
-        
-        data =  await self.fetch_endpoint(endpoint)
-        datas = data['data']
-        tickerID = datas[0]['tickerId']
-        return tickerID
     
 
     async def get_top_options(self, rank_type:str='volume', as_dataframe:bool = True):
@@ -100,71 +93,7 @@ class Webull:
         df.to_csv(f'data/top_active/top_active_{rank_type}.csv', index=False)
         return df
 
-    async def get_bars(self, symbol, timeframe:str='m1'):
-        """
-        Timeframes:
-        
-        >>> m1: 1 minute
-        >>> m5: 5 minute
-        >>> m10: 10 minute
-        >>> m15: 15 minute
-        >>> m20: 20 minute
-        >>> m30: 30 minute
-        >>> m60: 1 hour
-        >>> m120: 2 hour
-        >>> m240: 4 hour
-        
-        """
-        tickerid = await self.get_ticker_id(symbol)
-        endpoint = f"https://quotes-gw.webullfintech.com/api/quote/charts/query?tickerIds={tickerid}&type={timeframe}&count=1000"
-        datas =  await self.fetch_endpoint(endpoint)
-        if datas is not None:
-            data = datas[0]['data']
-            # Create empty lists for each column
-            timestamps = []
-            column2 = []
-            column3 = []
-            column4 = []
-            column5 = []
-            column6 = []
 
-            # Split each line and append values to respective lists
-            for line in data:
-                parts = line.split(',')
-                timestamps.append(parts[0])
-                column2.append(parts[1])
-                column3.append(parts[2])
-                column4.append(parts[3])
-                column5.append(parts[4])
-                column6.append(parts[5])
-
-  
-
-            df = pd.DataFrame({
-                'Timestamp': timestamps,
-                'Open': column2,
-                'Low': column3,
-                'High': column4,
-                'Close': column5,
-                'Vwap': column6
-            })
-
-            # Convert the 'Timestamp' column to integers before converting to datetime
-            df['Timestamp'] = df['Timestamp'].astype(int)
-
-            # Then convert to datetime
-            df['Timestamp'] = pd.to_datetime(df['Timestamp'], unit='s')
-
-
-            # Convert to Eastern Time
-            eastern = timezone('US/Eastern')
-            df['Timestamp'] = df['Timestamp'].dt.tz_localize('UTC').dt.tz_convert(eastern)
-
-            # Remove the timezone information
-            df['Timestamp'] = df['Timestamp'].dt.tz_localize(None)
-            df['Timeframe'] = timeframe
-            df['Ticker'] = symbol
-            return df
         
     async def get_all_rank_types(self,types):
         """
@@ -173,13 +102,13 @@ class Webull:
         >>> wb.most_active_types
         >>> wb.top_option_types
         """
-        if types == wb.top_option_types:
-            tasks = [wb.get_top_options(type) for type in types]
+        if types == self.top_option_types:
+            tasks = [self.get_top_options(type) for type in types]
             results = await asyncio.gather(*tasks)
 
             return results
-        elif types == wb.most_active_types:
-            tasks = [wb.get_most_active(type) for type in types]
+        elif types == self.most_active_types:
+            tasks = [self.get_most_active(type) for type in types]
             results = await asyncio.gather(*tasks)
             return results           
 
@@ -277,7 +206,7 @@ class Webull:
         >>> losers - all losers across all rank_types
         
         """
-        types = wb.top_gainer_loser_types
+        types = self.top_gainer_loser_types
         if type == 'gainers':
             tasks = [self.get_top_gainers(type) for type in types]
             results = await asyncio.gather(*tasks)
@@ -298,13 +227,37 @@ class Webull:
         df.to_csv('data/forex/forex_quotes.csv', index=False)
         return df
     
+    async def etf_finder(self, type:str='industry'):
+        """
+        TYPES:
 
+        >>> index
+        >>> industry
+        >>> commodity
+        >>> other
+        
+        """
+        endpoint = f"https://quotes-gw.webullfintech.com/api/wlas/etfinder/pcFinder?topNum=5&finderId=wlas.etfinder.{type}&nbboLevel=true"
+        datas = await self.fetch_endpoint(endpoint)
+        data = await parse_etfs(datas)
 
+        df = pd.DataFrame(data)
+        df['type'] = type
+        df.to_csv(f'data/etfs/etfs_{type}.csv', index=False)
+
+        return df
     
+    async def get_all_etfs(self, types):
+        types = self.etf_types
+        tasks =[self.etf_finder(type) for type in types]
 
-wb = Webull()
+        results = await asyncio.gather(*tasks)
+
+        return results
+
+markets = WebullMarkets()
 async def main():
 
-    forex = await wb.get_forex()
-    print(forex)
+    etfs = await markets.etf_finder()
+    print(etfs)
 asyncio.run(main())
