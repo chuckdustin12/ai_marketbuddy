@@ -50,14 +50,14 @@ async def parse_total_top_options(data_entry):
         parsed_data = {}
         ticker_info = data.get('ticker', {})
         for key, value in ticker_info.items():
-            if type(key) != list and key != 'exchangeTrade':
+            if type(key) != list and key != 'exchangeTrade' and key != 'derivativeSupport':
                 parsed_data[f't_{key}'] = value
     
         # Parsing 'values' attributes
         values_info = data.get('values', {})
         for key, value in values_info.items():
 
-            if type(key) != list and key != 'exchangeTrade':
+            if type(key) != list and key != 'exchangeTrade' and key != 'derivativeSupport':
                 parsed_data[f'v_{key}'] = value
         
         all_parsed_data.append(parsed_data)
@@ -76,7 +76,7 @@ async def parse_contract_top_options(data_entry):
         belong_ticker_info = data.get('belongTicker', {})
         
         for key, value in belong_ticker_info.items():
-            if type(key) != list:
+            if type(key) != list and key != 'exchangeTrade' and key != 'derivativeSupport':
                 parsed_data[f'bt_{key}'] = value
 
        
@@ -84,13 +84,13 @@ async def parse_contract_top_options(data_entry):
         # Parsing 'derivative' attributes
         derivative_info = data.get('derivative', {})
         for key, value in derivative_info.items():
-            if type(key) != list and key != 'exchangeTrade':
+            if type(key) != list and key != 'exchangeTrade' and key != 'derivativeSupport':
                 parsed_data[f'd_{key}'] = value
         
         # Parsing 'values' attributes
         values_info = data.get('values', {})
         for key, value in values_info.items():
-            if type(key) != list and key != 'exchangeTrade':
+            if type(key) != list and key != 'exchangeTrade' and key != 'derivativeSupport':
                 parsed_data[f'v_{key}'] = value 
 
         all_parsed_data.append(parsed_data)
@@ -108,13 +108,13 @@ async def parse_ticker_values(data_entry):
         parsed_data = {}
         ticker_info = data.get('ticker', {})
         for key, value in ticker_info.items():
-            if type(key) != list:
+            if type(key) != list and key != 'secType' and key != 'derivativeSupport':
                 parsed_data[f't_{key}'] = value
     
         # Parsing 'values' attributes
         values_info = data.get('values', {})
         for key, value in values_info.items():
-            if type(key) != list:
+            if type(key) != list and key != 'secType' and key != 'derivativeSupport':
                 parsed_data[f'v_{key}'] = value
         
         all_parsed_data.append(parsed_data)
