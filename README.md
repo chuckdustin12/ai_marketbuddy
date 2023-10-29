@@ -18,3 +18,17 @@ add: YOUR_STOCKSERA_KEY=your key
 
 
 You can now import and use the stocksera functions.
+
+
+## To use the nasdaq datalink functions:
+
+Go to:
+
+https://data.nasdaq.com/sign-up
+
+Make an account. After doing so - log in and go to your account settings. Request a new key.
+
+Copy/paste the key into the .env file as YOUR_NASDAQ_KEY=key.
+
+
+You can now import and use the nasdaq datalink functions.
