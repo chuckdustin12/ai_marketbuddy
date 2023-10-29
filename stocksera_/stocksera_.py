@@ -233,7 +233,7 @@ class StockSera:
 
 
 
-    def highest_shorted(self):
+    def highest_shorted(self) -> List[HighestShortedData]:
         """
         Arguments
 

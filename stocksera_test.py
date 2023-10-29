@@ -29,6 +29,12 @@ print(short_vol)
 #good for settlement window
 highest_shorted = ss.highest_shorted()
 
+print(highest_shorted)
 
-#latest
-print(highest_shorted[0])
+#by attribute:
+
+for item in highest_shorted:
+    print(item.date)
+    print(item.average_volume)
+    print(item.short_interest)
+    # .....
