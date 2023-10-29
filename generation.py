@@ -1,7 +1,7 @@
 """USE THIS FILE TO GENERATE LISTS OF TICKERS AS NEEDED FOR BATCH CALLS TO FUNCTIONS"""
 
 
-from webull.webull_markets import WebullMarkets
+from apis.webull.webull_markets import WebullMarkets
 
 
 markets = WebullMarkets()

@@ -1,4 +1,4 @@
-from webull.webull_trading import WebullTrading
+from apis.webull.webull_trading import WebullTrading
 
 import asyncio
 

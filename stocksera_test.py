@@ -1,4 +1,4 @@
-from stocksera_.stocksera_ import StockSera
+from apis.stocksera_.stocksera_ import StockSera
 from list_sets.ticker_lists import most_active_tickers
 
 ss = StockSera()

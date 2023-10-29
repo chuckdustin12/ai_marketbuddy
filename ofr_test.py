@@ -1,5 +1,5 @@
-from ofr.ofr_sdk import OFR
-from ofr.ofr_list_sets import REPO_OFR,NYPD_OFR,TYLD_OFR,MMF_OFR,FNYR_OFR
+from apis.ofr.ofr_sdk import OFR
+from apis.ofr.ofr_list_sets import REPO_OFR,NYPD_OFR,TYLD_OFR,MMF_OFR,FNYR_OFR
 
 import asyncio
 import aiohttp

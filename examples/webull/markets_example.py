@@ -1,6 +1,6 @@
 import asyncio
 
-from webull.webull_markets import WebullMarkets
+from apis.webull.webull_markets import WebullMarkets
 import os
 
 connection_string = os.environ.get('CONNECTION_STRING')
