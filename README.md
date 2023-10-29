@@ -1,6 +1,9 @@
 #### to get your free stocksera key:
 https://stocksera.pythonanywhere.com/accounts/signup/
 
+
+After signing up, click the developers tab on the top of the screen and then click "Generate"
+
 #USAGE:
 
 #### Clone repo
