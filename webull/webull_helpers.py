@@ -109,13 +109,13 @@ async def parse_ticker_values(data_entry):
         ticker_info = data.get('ticker', {})
         for key, value in ticker_info.items():
             if type(key) != list and key != 'secType' and key != 'derivativeSupport':
-                parsed_data[f't_{key}'] = value
+                parsed_data[f'{key}'] = value
     
         # Parsing 'values' attributes
         values_info = data.get('values', {})
         for key, value in values_info.items():
             if type(key) != list and key != 'secType' and key != 'derivativeSupport':
-                parsed_data[f'v_{key}'] = value
+                parsed_data[f'{key}'] = value
         
         all_parsed_data.append(parsed_data)
     return all_parsed_data

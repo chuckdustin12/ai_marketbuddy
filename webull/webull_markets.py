@@ -86,7 +86,7 @@ class WebullMarkets(DatabaseManager):
         df['rank_type'] = rank_type
         df.to_csv(f'data/top_options/top_options_{rank_type}.csv', index=False)
         df.columns = df.columns.str.lower()
-        df = df.drop(columns=['dt', 'sectype', 'fatradetime', 'tradetime', 'trdstatus', 'status', 'template'])
+        df = df.drop(columns=['dt', 'sectype', 'fatradetime', 'tradetime', 'status', 'template'])
         if self.connection_string is not None:
             df['totalasset'] = df['totalasset'].astype(float)
             df['netasset'] = df['netasset'].astype(float)
