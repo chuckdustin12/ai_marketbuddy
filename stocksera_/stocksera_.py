@@ -4,17 +4,21 @@ import pandas as pd
 
 from typing import List
 from concurrent.futures import ThreadPoolExecutor, as_completed
-from .daily_treasury import DailyTreasuryData
-from .sec_filings import SECFilingsData
-from .ftds import FailureToDeliverData
-from .highest_shorted import HighestShortedData
-from .short_volume import ShortVolumeData
-from .inflation import InflationData
-from .borrowed_shares import BorrowedSharesData
-from .jobless_claims import JoblessClaimsData
-from .jim_cramer import JimCramerData
-from .retail_sales import RetailSalesData
-from .reverse_repo import ReverseRepoData
+from .models.daily_treasury import DailyTreasuryData
+from .models.sec_filings import SECFilingsData
+from .models.market_news import MarketNewsData
+from .models.news_sentiment import NewsSentimentData
+from .models.insider_trades import InsiderTrades
+from .models.ftds import FailureToDeliverData
+from .models.low_float import LowFloatData
+from .models.highest_shorted import HighestShortedData
+from .models.short_volume import ShortVolumeData
+from .models.inflation import InflationData
+from .models.borrowed_shares import BorrowedSharesData
+from .models.jobless_claims import JoblessClaimsData
+from .models.jim_cramer import JimCramerData
+from .models.retail_sales import RetailSalesData
+from .models.reverse_repo import ReverseRepoData
 
 
 class StockSera:
@@ -209,35 +213,13 @@ class StockSera:
             df.to_csv(f'data/stocksera/failure_to_deliver_{ticker_or_tickers}.csv', index=False)
             return df
 
-    def house_trades(self):
-        """
-        Arguments:
-
-        >>> ...
-        """
-
-        data = self.client.house()
-        print(data)
-        house = data['house']
-     
-        districts_available = data['districts_available']
-        tickers_available = data['tickers_available']
-
-        districts_df = pd.DataFrame(districts_available)
-        tickers_df = pd.DataFrame(tickers_available)
-
-
-
-        print(tickers_df.columns)
-        print(districts_df.columns)
-
-
-
     def highest_shorted(self) -> List[HighestShortedData]:
         """
         Arguments
 
-        >>> ...
+        >>> None
+
+
         """
 
         data = self.client.short_interest()
@@ -259,82 +241,126 @@ class StockSera:
             short_interest.append(short_interest_data)
 
         return short_interest
-    def inflation(self):
+    def inflation(self, year:str=None):
         """
         Arguments:
-        >>> ...
+        >>> year: OPTIONAL - the year to survey (default all results)
         """
 
         data = self.client.inflation()
+        if year is None:
+            data = InflationData(data)
+            df = pd.DataFrame(data)
+            df.columns = df.columns.str.lower()
+            return df
+        else:
+            data = InflationData(data).get_inflation_by_year(year)
+            df = pd.DataFrame(data, index=[year])
+            df.columns = df.columns.str.lower()
+            return df
 
-        df = pd.DataFrame(data)
-
-        print(df.columns)
 
 
-    def jobless_claims(self, days:str='100'):
+    def jobless_claims(self, days:str='100', as_dataframe:bool=True) -> List[JoblessClaimsData]:
         """
         Arguments:
 
-        >>> ...
+        >>> days: the number of days to survey (optional - default 100)
+        >>> as_dataframe: return as a dataframe (optional -default False)
         """
-
+        
 
         data = self.client.jobless_claims(days)
-        df = pd.DataFrame(data)
-        print(df.columns)
+        formatted_data = [{k.lower().replace(' ', '_'): v for k, v in item.items()} for item in data]
+        if as_dataframe == True:
+            
+            jobless_data_dicts = [JoblessClaimsData(**item).as_dict() for item in formatted_data]
+       
+            df = pd.DataFrame(jobless_data_dicts)
+            df.columns = df.columns.str.lower()
+            df = df[::-1]
+            return df
+
+        data = [JoblessClaimsData(**item) for item in formatted_data]
+
+        return data
+        
 
 
 
     
-    def insider_trading(self):
+    def insider_trading(self, as_dataframe:bool=True) -> List[InsiderTrades]:
         """
         Arguments:
 
-        >>> ...
+        >>> as_dataframe: optional - returns as a pandas dataframe. (default True)
         """
-
+        
         data = self.client.insider_trading()
+        formatted_data = [{k.lower().replace(' ', '_'): v for k, v in item.items()} for item in data]
+        if as_dataframe == False:
+            formatted_data = [InsiderTrades(**i) for i in formatted_data]
+            return formatted_data
 
-        df = pd.DataFrame(data)
-        print(df.columns)
+        df = pd.DataFrame(formatted_data)
+        return df
 
 
   
-    def jim_cramer(self):
+    def jim_cramer(self, as_dataframe:bool=True) -> List[JimCramerData]:
         """
         Arguments:
-        >>> ...
+        >>> as_dataframe: optional - returns as a pandas dataframe (default True)
         """
 
         data = self.client.jim_cramer()
-
-        df = pd.DataFrame(data)
-
-        print(df.columns)
+        formatted_data = [{k.lower().replace(' ', '_'): v for k, v in item.items()} for item in data]
+        if as_dataframe == False:
+            formatted_data = [JimCramerData(**i) for i in formatted_data]
+            return formatted_data
+        df = pd.DataFrame(formatted_data)
+        return df
+       
 
    
 
 
-    def low_float(self):
+    def low_float(self, as_dataframe: bool= True):
         """
         Arguments:
 
-        >>> ...
+        >>> as_dataframe: optional - returns as a pandas dataframe (default True)
         """
-
+        
         data = self.client.low_float()
+        formatted_data = [{k.lower().replace(' ', '_'): v for k, v in item.items()} for item in data]
 
-        df = pd.DataFrame(data)
-        print(df.columns)
+        if as_dataframe == False:
+            formatted_data = LowFloatData(formatted_data)
+            return formatted_data
+
+        df = pd.DataFrame(formatted_data)
+        return df
+       
 
 
 
-    def sec_filings(self, ticker_or_tickers, concurrency=None):
+    def sec_filings(self, ticker_or_tickers, concurrency:str=None):
+        """
+        Arguments:
+
+        >>> ticker_or_tickers: pass in a single ticker or list of tickers
+
+        optional:
+
+        >>> concurrency: if passing in a list - set concurrency levels
+        """
         def fetch_data(ticker):
-            data = self.client.sec_filings(ticker)
+            data = self.client.sec_fillings(ticker)
+            data = [{k.lower().replace(' ', '_'): v for k, v in item.items()} for item in data]
             df = pd.DataFrame(data)
-            df['ticker'] = ticker  # Assuming the API doesn't return the ticker, add it manually
+            
+            df['ticker'] = ticker
             df['filling'] = df['filling'].astype(str)
             df['description'] = df['description'].astype(str)
             df['filling_date'] = pd.to_datetime(df['filling_date'])
@@ -359,7 +385,7 @@ class StockSera:
             return combined_df
 
         else:
-            data = self.client.sec_filings(ticker_or_tickers)
+            data = self.client.sec_fillings(ticker_or_tickers)
             df = pd.DataFrame(data)
             df['ticker'] = ticker_or_tickers  # Assuming the API doesn't return the ticker, add it manually
             df['filling'] = df['filling'].astype(str)
@@ -372,16 +398,23 @@ class StockSera:
 
 
  
-    def news_sentiment(self, ticker_or_tickers, concurrency=None):
+    def news_sentiment(self, ticker_or_tickers, concurrency:str=None):
+        """
+        Arguments:
+
+        required: 
+        >>> ticker_or_tickers: pass in either a single ticker or list of tickers.
+
+        optional:
+        >>> if passing in a list of tickers, set concurrency level as needed.
+        
+        """
         def fetch_data(ticker):
             data = self.client.news_sentiment(ticker)
             df = pd.DataFrame(data)
-            df['ticker'] = ticker  # Assuming the API doesn't return the ticker, add it manually
-            df['date'] = pd.to_datetime(df['date'])
-            df['title'] = df['title'].astype(str)
-            df['link'] = df['link'].astype(str)
-            df['sentiment'] = df['sentiment'].astype(str)
             df.columns = df.columns.str.lower()
+            df['ticker'] = ticker  # Assuming the API doesn't return the ticker, add it manually
+        
             return df
 
         if concurrency and isinstance(ticker_or_tickers, list):
@@ -393,6 +426,7 @@ class StockSera:
                     ticker = futures[future]
                     try:
                         data = future.result()
+                        
                     except Exception as exc:
                         print(f"{ticker} generated an exception: {exc}")
                     else:
@@ -404,6 +438,7 @@ class StockSera:
         else:
             data = self.client.news_sentiment(ticker_or_tickers)
             df = pd.DataFrame(data)
+            print(df.columns)
             df['ticker'] = ticker_or_tickers  # Assuming the API doesn't return the ticker, add it manually
             df['date'] = pd.to_datetime(df['date'])
             df['title'] = df['title'].astype(str)
@@ -415,48 +450,64 @@ class StockSera:
    
 
 
-    def market_news(self):
+    def market_news(self, as_dataframe:bool=True) -> List[MarketNewsData]:
         """
         Arguments:
 
-        >>> ...
+        >>> as_dataframe: optional - returns as a pandas dataframe (default True)
         
         """
 
         data = self.client.market_news()
+        formatted_data = [{k.lower().replace(' ', '_'): v for k, v in item.items()} for item in data]
+
+        if as_dataframe == False:
+            formatted_data = [MarketNewsData(**i) for i in formatted_data]
+            return formatted_data
+
+        df = pd.DataFrame(formatted_data)
+        
+
+        return df
 
 
-        df = pd.DataFrame(data)
-
-        print(df.columns)
-
-
-    def retail_sales(self, days:str='100'):
+    def retail_sales(self, days:str='100', as_dataframe:bool=True) -> List[RetailSalesData]:
 
         """
         Arguments:
 
-        >>> ...
+        >>> days: optional: the days to survey (default 100)
+        >>> as_dataframe: optional - returns as a pandas dataframe (default true).
         """
 
         data = self.client.retail_sales(days)
+        formatted_data = [{k.lower().replace(' ', '_'): v for k, v in item.items()} for item in data]
+        if as_dataframe == False:
+            formatted_data = [RetailSalesData(**i) for i in formatted_data]
+            return formatted_data
 
-        df = pd.DataFrame(data)
+        df = pd.DataFrame(formatted_data)
+        df = df[::-1] #reverse the order
+        return df
+       
 
-        print(df.columns)
 
 
-
-    def reverse_repo(self, days:str='100'):
+    def reverse_repo(self, days:str='100', as_dataframe: bool=True) -> List[ReverseRepoData]:
         """
         Arguments:
-        >>> ...
+        >>> days: optional - the number of days to survey
+        >>> as_dataframe: optional - returns as a pandas dataframe (default True)
         """
 
         data = self.client.reverse_repo(days)
+        formatted_data = [{k.lower().replace(' ', '_'): v for k, v in item.items()} for item in data]
+
+        if as_dataframe == False:
+            formatted_data = [ReverseRepoData(**i) for i in formatted_data]
+            return formatted_data
+
+        df = pd.DataFrame(formatted_data)
 
 
-        df = pd.DataFrame(data)
-
-
-        print(df.columns)
+        return df

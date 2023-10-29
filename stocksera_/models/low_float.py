@@ -1,4 +1,6 @@
-from dataclasses import dataclass
+from dataclasses import dataclass,asdict
+
+import pandas as pd
 
 @dataclass
 class LowFloatData:
@@ -13,6 +15,10 @@ class LowFloatData:
     short_int: float
     market_cap: int
     industry: str
+
+    def as_dataframe(self) -> pd.DataFrame:
+        """Converts the object to a pandas DataFrame."""
+        return pd.DataFrame([asdict(self)])
 
     def insert_into_pg(self, conn):
         cursor = conn.cursor()

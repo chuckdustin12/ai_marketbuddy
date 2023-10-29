@@ -1,5 +1,7 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, asdict
 from datetime import datetime
+
+import pandas as pd
 
 @dataclass
 class RetailSalesData:
@@ -7,6 +9,11 @@ class RetailSalesData:
     amount: float
     percent_change: float
     monthly_avg_cases: int
+
+
+    def as_dataframe(self) -> pd.DataFrame:
+        """Converts the object to a pandas DataFrame."""
+        return pd.DataFrame([asdict(self)]) 
 
     def insert_into_pg(self, conn):
         cursor = conn.cursor()
