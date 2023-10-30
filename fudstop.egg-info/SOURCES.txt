@@ -1,0 +1,13 @@
+README.md
+setup.py
+apis/__init__.py
+apis/helpers.py
+apis/webull/__init__.py
+apis/webull/database_manager.py
+apis/webull/webull_helpers.py
+apis/webull/webull_markets.py
+apis/webull/webull_trading.py
+fudstop.egg-info/PKG-INFO
+fudstop.egg-info/SOURCES.txt
+fudstop.egg-info/dependency_links.txt
+fudstop.egg-info/top_level.txt
