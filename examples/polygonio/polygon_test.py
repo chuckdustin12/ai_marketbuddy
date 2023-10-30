@@ -24,6 +24,27 @@ async def ticker_snapshot():
 
     print(f"Number of tickers found: {len(ticker_data)}")
 
-    print(ticker_data)
+    #easily print attributes / work with attributes using dot notation:
+
+    for attribute in ticker_data:
+
+
+        #printing the parents
+        print(f"Last Trade:",attribute.last_trade)
+        print(f"Last Quote:",attribute.stock_last_quote)
+        print(f"Day:",attribute.stock_day)
+        print(f"Prev Day:",attribute.prev_day)
+        print(f"Minute:", attribute.stock_minute_bar)
+
+
+        #printing the children within a parent
+
+        """
+        >>> Last trade example:
+        """
+
+        last_trade = attribute.last_trade.conditions
+        print(last_trade)
+
 
 asyncio.run(ticker_snapshot())

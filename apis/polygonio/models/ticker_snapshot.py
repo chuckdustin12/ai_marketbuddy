@@ -1,5 +1,7 @@
 from typing import List, Optional
 from dataclasses import dataclass, field
+from helpers import convert_datetime_list
+from polygonio.mapping import stock_condition_dict,STOCK_EXCHANGES
 from typing import Dict
 from datetime import datetime
 
@@ -119,12 +121,15 @@ class StockSnapshot():  # Inheritance
         trade_data = ticker_data.get('lastTrade', None)
         if trade_data:
             self.last_trade = LastTrade(
-                conditions=trade_data.get('c'),
+                conditions = [stock_condition_dict.get(i) for i in trade_data.get('c')],
+
                 trade_id=trade_data.get('i'),
                 trade_price=trade_data.get('p'),
                 trade_size=trade_data.get('s'),
-                trade_timestamp=trade_data.get('t'),
-                trade_exchange=trade_data.get('x'),
+                timestamp = convert_datetime_list(trade_data.get('t'), unit='ns'),
+                exchange = STOCK_EXCHANGES.get(trade_data.get('x'))
+
+        
             )
         else:
             trade_data = None

@@ -1,3 +1,9 @@
 .env
 data/
 __pycache_
+tmp/
+web/
+live_markets/
+data/
+.cache/
+.env
