@@ -7,3 +7,7 @@ live_markets/
 data/
 .cache/
 .env
+dist/
+build/
+.Python
+*.egg-info/
