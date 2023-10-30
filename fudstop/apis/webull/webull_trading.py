@@ -233,3 +233,7 @@ class WebullTrading:
         return data
     
 
+    async def forecast(self):
+       # ticker_id = await self.get_ticker_id(ticker)
+
+       endpoint = f""

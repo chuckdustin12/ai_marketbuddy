@@ -208,29 +208,52 @@ class DatabaseManager:
                         except Exception as e:
                             print(f"An error occurred while inserting the last batch: {e}")
                             raise  # Transaction wil
-    async def update_dtype_mapping(self, df, dtype_mapping):
-        for col in df.columns:
-            non_null_values = df[col].dropna()
-            
-            # If dtype is object, inspect the elements to determine the actual type
-            if df[col].dtype == 'object':
-                if all(isinstance(x, str) for x in non_null_values.sample(min(10, len(non_null_values)))):
-                    dtype_mapping[col] = 'TEXT'
-                elif all(isinstance(x, list) for x in non_null_values.sample(min(10, len(non_null_values)))):
-                    dtype_mapping[col] = 'ARRAY'  # or whatever Postgres type you want to use
-                elif all(isinstance(x, dict) for x in non_null_values.sample(min(10, len(non_null_values)))):
-                    dtype_mapping[col] = 'JSONB'  # or JSON
-                # Add more conditions here
-                continue  # Skip the remaining checks for this column
-            
-            if all(isinstance(x, int) for x in non_null_values.sample(min(10, len(non_null_values)))):
-                dtype_mapping[col] = 'BIGINT'
-            elif all(isinstance(x, (float, np.float64)) for x in non_null_values.sample(min(10, len(non_null_values)))):
-                dtype_mapping[col] = 'DOUBLE PRECISION'
-            elif all(isinstance(x, bool) for x in non_null_values.sample(min(10, len(non_null_values)))):
-                dtype_mapping[col] = 'BOOLEAN'
-            elif all(isinstance(x, (pd.Timestamp, np.datetime64)) for x in non_null_values.sample(min(10, len(non_null_values)))):
-                dtype_mapping[col] = 'TIMESTAMP'
-            # Add more conditions here based on your specific needs
+    async def insert_webull_option(self, option_data):
+            async with self.pool.acquire() as conn:
+                
+                await conn.execute("""
+                    INSERT INTO webull_options (
+                        open, high, low, close, change, change_ratio, strike, expiry,
+                        call_put, oi, oi_change, active_level, cycle, volume,
+                        latest_price_vol, delta, imp_vol, gamma, theta, vega, rho, option_symbol, underlying_symbol,trade_time, tickerid
+                    ) VALUES (
+                        $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, 
+                        $17, $18, $19, $20, $21, $22, $23, $24,$25
+                    )
+                    ON CONFLICT (option_symbol, underlying_symbol, strike, expiry, call_put)
+                    DO UPDATE SET
+                    open = EXCLUDED.open, 
+                    high = EXCLUDED.high, 
+                    low = EXCLUDED.low, 
+                    close = EXCLUDED.close, 
+                    change = EXCLUDED.change, 
+                    change_ratio = EXCLUDED.change_ratio, 
+                    oi = EXCLUDED.oi, 
+                    oi_change = EXCLUDED.oi_change, 
+                    active_level = EXCLUDED.active_level, 
+                    cycle = EXCLUDED.cycle, 
+                    volume = EXCLUDED.volume, 
+                    latest_price_vol = EXCLUDED.latest_price_vol, 
+                    delta = EXCLUDED.delta, 
+                    imp_vol = EXCLUDED.imp_vol, 
+                    gamma = EXCLUDED.gamma, 
+                    theta = EXCLUDED.theta, 
+                    vega = EXCLUDED.vega, 
+                    rho = EXCLUDED.rho, 
+                    trade_time = EXCLUDED.trade_time
+                    """, 
 
-        return dtype_mapping
+                option_data['open'], option_data['high'], option_data['low'], option_data['close'],
+                option_data['change'], option_data['change_ratio'], option_data['strike'], option_data['expiry'],
+                option_data['call_put'], option_data['oi'], option_data['oi_change'], option_data['active_level'],
+                option_data['cycle'], option_data['volume'], option_data['latest_price_vol'], option_data['delta'],
+                option_data['imp_vol'], option_data['gamma'], option_data['theta'], option_data['vega'], 
+                option_data['rho'], option_data['option_symbol'], option_data['underlying_symbol'],option_data['trade_time'], option_data['tickerid']
+                )
+    async def disconnect(self):
+        await self.pool.close()
+
+    async def fetch(self, query):
+        async with self.pool.acquire() as conn:
+            records = await conn.fetch(query)
+            return records
