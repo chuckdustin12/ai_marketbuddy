@@ -1,3 +1,11 @@
+import sys
+from pathlib import Path
+
+# Add the project directory to the sys.path
+project_dir = str(Path(__file__).resolve().parents[1])
+if project_dir not in sys.path:
+    sys.path.append(project_dir)
+
 import os
 import stocksera
 import pandas as pd
@@ -19,14 +27,28 @@ from .models.jobless_claims import JoblessClaimsData
 from .models.jim_cramer import JimCramerData
 from .models.retail_sales import RetailSalesData
 from .models.reverse_repo import ReverseRepoData
+from datetime import datetime, timedelta
+from dotenv import load_dotenv
+load_dotenv()
 
-
+YOUR_STOCKSERA_KEY = os.environ.get('YOUR_STOCKSERA_KEY')
+print(YOUR_STOCKSERA_KEY)
 class StockSera:
     def __init__(self):
-        self.api_key = os.environ.get('YOUR_STOCKSERA_KEY')
 
-        self.client = stocksera.Client(self.api_key)
 
+        self.client = stocksera.Client(YOUR_STOCKSERA_KEY)
+
+
+        self.today = datetime.now().strftime('%Y-%m-%d')
+        self.yesterday = (datetime.now() - timedelta(days=1)).strftime('%Y-%m-%d')
+        self.tomorrow = (datetime.now() + timedelta(days=1)).strftime('%Y-%m-%d')
+        self.thirty_days_ago = (datetime.now() - timedelta(days=30)).strftime('%Y-%m-%d')
+        self.thirty_days_from_now = (datetime.now() + timedelta(days=30)).strftime('%Y-%m-%d')
+        self.fifteen_days_ago = (datetime.now() - timedelta(days=15)).strftime('%Y-%m-%d')
+        self.fifteen_days_from_now = (datetime.now() + timedelta(days=15)).strftime('%Y-%m-%d')
+        self.eight_days_from_now = (datetime.now() + timedelta(days=8)).strftime('%Y-%m-%d')
+        self.eight_days_ago = (datetime.now() - timedelta(days=8)).strftime('%Y-%m-%d')
 
 
     def borrowed_shares(self, ticker_or_tickers, concurrency=None) -> List[BorrowedSharesData]:

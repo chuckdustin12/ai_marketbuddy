@@ -15,8 +15,21 @@ from .trade_models.ticker_query import WebullStockData
 from .trade_models.analyst_ratings import Analysis
 
 
+from datetime import datetime, timedelta
+
 class WebullTrading:
     def __init__(self):
+
+
+        self.today = datetime.now().strftime('%Y-%m-%d')
+        self.yesterday = (datetime.now() - timedelta(days=1)).strftime('%Y-%m-%d')
+        self.tomorrow = (datetime.now() + timedelta(days=1)).strftime('%Y-%m-%d')
+        self.thirty_days_ago = (datetime.now() - timedelta(days=30)).strftime('%Y-%m-%d')
+        self.thirty_days_from_now = (datetime.now() + timedelta(days=30)).strftime('%Y-%m-%d')
+        self.fifteen_days_ago = (datetime.now() - timedelta(days=15)).strftime('%Y-%m-%d')
+        self.fifteen_days_from_now = (datetime.now() + timedelta(days=15)).strftime('%Y-%m-%d')
+        self.eight_days_from_now = (datetime.now() + timedelta(days=8)).strftime('%Y-%m-%d')
+        self.eight_days_ago = (datetime.now() - timedelta(days=8)).strftime('%Y-%m-%d')
         self.timeframes = ['m1','m5', 'm10', 'm15', 'm20', 'm30', 'm60', 'm120', 'm240', 'd1']
 
         self.headers = {
@@ -169,9 +182,18 @@ class WebullTrading:
         return data
     
 
-    async def cost_distribution(self, ticker:str, start_date:str='2023-10-01', end_date:str='2023-10-27'):
+    async def cost_distribution(self, ticker:str, start_date:str=None, end_date:str=None):
+
+        if start_date is None:
+            start_date = self.yesterday
+            
+
+        if end_date is None:
+            end_date = self.today
+
         ticker_id = await self.get_ticker_id(ticker)
         endpoint = f"https://quotes-gw.webullfintech.com/api/quotes/chip/query?tickerId={ticker_id}&startDate={start_date}&endDate={end_date}"
+ 
         datas = await self.fetch_endpoint(endpoint)
         data = CostDistribution(datas)
         return data
@@ -233,7 +255,3 @@ class WebullTrading:
         return data
     
 
-    async def forecast(self):
-       # ticker_id = await self.get_ticker_id(ticker)
-
-       endpoint = f""

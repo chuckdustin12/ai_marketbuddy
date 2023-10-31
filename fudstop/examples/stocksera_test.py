@@ -1,5 +1,13 @@
-from apis.stocksera_.stocksera_ import StockSera
-from list_sets.ticker_lists import most_active_tickers
+import sys
+from pathlib import Path
+
+# Add the project directory to the sys.path
+project_dir = str(Path(__file__).resolve().parents[1])
+if project_dir not in sys.path:
+    sys.path.append(project_dir)
+
+
+from fudstop.apis.stocksera_.stocksera_ import StockSera
 
 ss = StockSera()
 

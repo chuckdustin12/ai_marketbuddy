@@ -1,36 +1,48 @@
 import os
+from dotenv import load_dotenv
+load_dotenv()
 from typing import List, Dict
 
 from .models.aggregates import AggregatesData
 from .models.ticker_news import TickerNews
 from .models.company_info import CombinedCompanyResults
+from .models.technicals import RSI, EMA, SMA
 from .models.ticker_snapshot import StockSnapshot
 from datetime import datetime, timedelta
 import aiohttp
-import asyncio
-import json
-import pandas as pd
 
 from urllib.parse import urlencode
+
+from fudstop.apis.helpers import flatten_dict
 
 class Polygon:
     def __init__(self, connection_string=None):
         self.connection_string = connection_string
         self.api_key = os.environ.get('YOUR_POLYGON_KEY')
-        self.today_str = datetime.now().strftime('%Y-%m-%d')
+        self.today = datetime.now().strftime('%Y-%m-%d')
+        self.yesterday = (datetime.now() - timedelta(days=1)).strftime('%Y-%m-%d')
+        self.tomorrow = (datetime.now() + timedelta(days=1)).strftime('%Y-%m-%d')
+        self.thirty_days_ago = (datetime.now() - timedelta(days=30)).strftime('%Y-%m-%d')
+        self.thirty_days_from_now = (datetime.now() + timedelta(days=30)).strftime('%Y-%m-%d')
+        self.fifteen_days_ago = (datetime.now() - timedelta(days=15)).strftime('%Y-%m-%d')
+        self.fifteen_days_from_now = (datetime.now() + timedelta(days=15)).strftime('%Y-%m-%d')
+        self.eight_days_from_now = (datetime.now() + timedelta(days=8)).strftime('%Y-%m-%d')
+        self.eight_days_ago = (datetime.now() - timedelta(days=8)).strftime('%Y-%m-%d')
 
 
     async def fetch_endpoint(self, endpoint, params=None):
         # Build the query parameters
-        if params:
-            query_string = urlencode({k: v for k, v in params.items() if v is not None})
+        filtered_params = {k: v for k, v in params.items() if v is not None} if params else {}
+        
+        if filtered_params:
+            query_string = urlencode(filtered_params)
             if query_string:
                 endpoint = f"{endpoint}?{query_string}&{self.api_key}"
-               
+                
         async with aiohttp.ClientSession() as session:
-            async with session.get(url=endpoint, params=params) as response:
+            async with session.get(url=endpoint, params=filtered_params) as response:
                 return await response.json()  # or response.text() based on your needs
-            
+                
 
 
 
@@ -199,4 +211,161 @@ class Polygon:
                     with open('list_sets/saved_tickers.py', 'w') as f:
                         f.write(str(ticker_list))
                 return ticker_data
+
+
+    async def rsi(self, ticker:str, timespan:str, limit:str='1000', window:str='14', date_from:str=None, date_to:str=None):
+        """
+        Arguments:
+
+        >>> ticker
+
+        >>> AVAILABLE TIMESPANS:
+
+        minute
+        hour
+        day
+        week
+        month
+        quarter
+        year
+
+        >>> date_from (optional) 
+        >>> date_to (optional)
+        >>> window: the RSI window (default 14)
+        >>> limit: the number of N timespans to survey
+        
+        """
+
+        if date_from is None:
+            date_from = self.eight_days_ago
+
+        if date_to is None:
+            date_to = self.today
+
+
+        endpoint = f"https://api.polygon.io/v1/indicators/rsi/{ticker}?timespan={timespan}&timestamp.gte={date_from}&timestamp.lte={date_to}&limit={limit}&apiKey={self.api_key}"
+
+        async with aiohttp.ClientSession() as session:
+            async with session.get(endpoint) as resp:
+                datas = await resp.json()
+
+
+                return RSI(datas, ticker)
+            
+
+
+    async def sma(self, ticker:str, timespan:str, limit:str='1000', window:str='9', date_from:str=None, date_to:str=None):
+        """
+        Arguments:
+
+        >>> ticker
+
+        >>> AVAILABLE TIMESPANS:
+
+        minute
+        hour
+        day
+        week
+        month
+        quarter
+        year
+
+        >>> date_from (optional) 
+        >>> date_to (optional)
+        >>> window: the SMA window (default 9)
+        >>> limit: the number of N timespans to survey
+        
+        """
+
+        if date_from is None:
+            date_from = self.eight_days_ago
+
+        if date_to is None:
+            date_to = self.today
+
+
+        endpoint = f"https://api.polygon.io/v1/indicators/sma/{ticker}?timespan={timespan}&window={window}&timestamp.gte={date_from}&timestamp.lte={date_to}&limit={limit}&apiKey={self.api_key}"
+
+        async with aiohttp.ClientSession() as session:
+            async with session.get(endpoint) as resp:
+                datas = await resp.json()
+
+
+                return SMA(datas, ticker)
+            
+
+
+    async def ema(self, ticker:str, timespan:str, limit:str='1000', window:str='21', date_from:str=None, date_to:str=None):
+        """
+        Arguments:
+
+        >>> ticker
+
+        >>> AVAILABLE TIMESPANS:
+
+        minute
+        hour
+        day
+        week
+        month
+        quarter
+        year
+
+        >>> date_from (optional) 
+        >>> date_to (optional)
+        >>> window: the EMA window (default 21)
+        >>> limit: the number of N timespans to survey
+        
+        """
+
+        if date_from is None:
+            date_from = self.eight_days_ago
+
+        if date_to is None:
+            date_to = self.today
+
+
+        endpoint = f"https://api.polygon.io/v1/indicators/ema/{ticker}?timespan={timespan}&window={window}&timestamp.gte={date_from}&timestamp.lte={date_to}&limit={limit}&apiKey={self.api_key}"
+
+        async with aiohttp.ClientSession() as session:
+            async with session.get(endpoint) as resp:
+                datas = await resp.json()
+
+
+                return EMA(datas, ticker)
+            
+
+
+
+
+    async def get_universal_snapshot(self, ticker, retries=3): #✅
+        """Fetches the Polygon.io universal snapshot API endpoint"""
+        timeout = aiohttp.ClientTimeout(total=10)  # 10 seconds timeout for the request
+        
+        for retry in range(retries):
+        # async with sema:
+            url = f"https://api.polygon.io/v3/snapshot?ticker.any_of={ticker}&apiKey={self.api_key}&limit=250"
+
+            
+            async with aiohttp.ClientSession(timeout=timeout) as session:
+                try:
+                    async with session.get(url) as resp:
+                        data = await resp.json()
+                        results = data.get('results', None)
+        
+                        if results is not None:
+                            flattened_results = [flatten_dict(result) for result in results]
+                            return flattened_results
+                            
+                except aiohttp.ClientConnectorError:
+                    print("ClientConnectorError occurred. Retrying...")
+                    continue
+                
+                except aiohttp.ContentTypeError as e:
+                    print(f"ContentTypeError occurred: {e}")  # Consider logging this
+                    continue
+                
+                except Exception as e:
+                    print(f"An unexpected error occurred: {e}")  # Consider logging this
+                    continue
 
