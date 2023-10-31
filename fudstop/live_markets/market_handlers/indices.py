@@ -1,0 +1,50 @@
+from polygon.websocket import WebSocketMessage
+from fudstop.apis.helpers import convert_to_ns_datetime
+import asyncio
+from typing import List
+from list_sets import indices_names_and_symbols_dict
+
+
+"""
+>>> Handles messages from the polygon.io websocket cluster 
+
+"""
+
+async def indices_handler(msg: List[WebSocketMessage], data_queue: asyncio.Queue, db_manager=None):
+    for m in msg:
+    # Fetch the name using the incoming symbol
+        name = indices_names_and_symbols_dict.get(m.symbol)
+
+        if name:
+            print(f'Ticker: {m.symbol}, Name: {name}')
+            database_data = { 
+                'name': name,
+                'ticker': m.symbol,
+                'day_open': m.official_open_price,
+                'minute_open': m.open,
+                'minute_high': m.high,
+                'minute_low': m.low,
+                'minute_close': m.close,
+                'minute_start': convert_to_ns_datetime(m.start_timestamp),
+                'minute_end': convert_to_ns_datetime(m.end_timestamp)
+            }
+
+            data_queue_data = { 
+                'type': 'Indices',
+                'name': name,
+                'ticker': m.symbol,
+                'day_open': m.official_open_price,
+                'minute_open': m.open,
+                'minute_high': m.high,
+                'minute_low': m.low,
+                'minute_close': m.close,
+                'minute_start': convert_to_ns_datetime(m.start_timestamp),
+                'minute_end': convert_to_ns_datetime(m.end_timestamp)
+            }
+
+            if db_manager is not None:
+                asyncio.create_task(db_manager.save_structured_message(data, "indices_aggs"))
+
+            #await db.insert_indices_aggs(data)
+            await data_queue.put(data_queue_data)
+        
