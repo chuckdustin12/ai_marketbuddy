@@ -1,9 +1,8 @@
 .env
 data/
-__pycache__
+__pycache__/*
 tmp/
 web/
-live_markets/
 data/
 .cache/
 .env
@@ -11,3 +10,4 @@ dist/
 build/
 .Python
 *.egg-info/
+cogs/

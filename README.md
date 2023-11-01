@@ -57,3 +57,19 @@ You can now import and use the nasdaq datalink functions.
        
         YOUR_DISCORD_HTTP_TOKEN=your_token
       
+
+
+## To use the polygon.io functions and features:
+
+
+1. head over to https://www.polygon.io
+
+2. Sign up. Polygon offers a free tier for tinkering, as well as subscriptions for real-time data APIs and websocket clusters.
+
+        When checking out - use code FUDSTOP at checkout to recieve a 10% discount on your order!
+
+
+3. After signing up - get your API key - post it in an .env file as: YOUR_POLYGON_KEY=key
+
+
+You can now use the robust polygon.io suite of tools, as well as the SDK kit for real-time market data analysis.

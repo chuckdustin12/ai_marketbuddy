@@ -1069,6 +1069,17 @@ conversion_mapping = {
     "M": 1_000_000,
 }
 
+
+
+# Approach 2: Fill Missing Values
+def fill_missing_values(data_dict):
+    max_length = max(len(v) for v in data_dict.values())
+    for k, v in data_dict.items():
+        if len(v) < max_length:
+            data_dict[k] = v + [None] * (max_length - len(v))
+
+
+
 all_units = "|".join(conversion_mapping.keys())
 float_re = natsort.numeric_regex_chooser(natsort.ns.FLOAT | natsort.ns.SIGNED)
 unit_finder = re.compile(rf"({float_re})\s*({all_units})", re.IGNORECASE)
