@@ -1,10 +1,13 @@
 from setuptools import setup, find_packages
 
+# Read requirements.txt and remove any comments
+with open('requirements.txt') as f:
+    requirements = f.read().splitlines()
+    requirements = [r.strip() for r in requirements if not r.startswith('#')]
+
 setup(
     name='fudstop',
-    version='0.1.2',
+    version='0.1.5',
     packages=find_packages(),
-    install_requires=[
-        # list your project dependencies here
-    ],
+    install_requires=requirements,
 )
