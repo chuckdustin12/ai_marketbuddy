@@ -1,6 +1,15 @@
-import os
+import sys
+from pathlib import Path
+
+# Add the project directory to the sys.path
+project_dir = str(Path(__file__).resolve().parents[2])
+if project_dir not in sys.path:
+    sys.path.append(project_dir)
+
 from dotenv import load_dotenv
 load_dotenv()
+
+import os
 from typing import List, Dict
 
 from .models.aggregates import AggregatesData
@@ -14,6 +23,10 @@ import aiohttp
 from urllib.parse import urlencode
 
 from fudstop.apis.helpers import flatten_dict
+
+YOUR_POLYGON_KEY = os.environ.get('YOUR_POLYGON_KEY')
+
+print(YOUR_POLYGON_KEY)
 
 class Polygon:
     def __init__(self, connection_string=None):
@@ -133,41 +146,45 @@ class Polygon:
 
     async def company_info(self, ticker) -> CombinedCompanyResults:
         url = f"https://api.polygon.io/v3/reference/tickers/{ticker}?apiKey={self.api_key}"
+        print(url)
         async with aiohttp.ClientSession() as session:
             async with session.get(url) as response:
                 data = await response.json()
-                results_data = data['results']
-                return CombinedCompanyResults(
-                    ticker=results_data.get('ticker'),
-                    name=results_data.get('name'),
-                    market=results_data.get('market'),
-                    locale=results_data.get('locale'),
-                    primary_exchange=results_data.get('primary_exchange'),
-                    type=results_data.get('type'),
-                    active=results_data.get('active'),
-                    currency_name=results_data.get('currency_name'),
-                    cik=results_data.get('cik'),
-                    composite_figi=results_data.get('composite_figi'),
-                    share_class_figi=results_data.get('share_class_figi'),
-                    market_cap=results_data.get('market_cap'),
-                    phone_number=results_data.get('phone_number'),
-                    description=results_data.get('description'),
-                    sic_code=results_data.get('sic_code'),
-                    sic_description=results_data.get('sic_description'),
-                    ticker_root=results_data.get('ticker_root'),
-                    homepage_url=results_data.get('homepage_url'),
-                    total_employees=results_data.get('total_employees'),
-                    list_date=results_data.get('list_date'),
-                    share_class_shares_outstanding=results_data.get('share_class_shares_outstanding'),
-                    weighted_shares_outstanding=results_data.get('weighted_shares_outstanding'),
-                    round_lot=results_data.get('round_lot'),
-                    address1=results_data.get('address', {}).get('address1'),
-                    city=results_data.get('address', {}).get('city'),
-                    state=results_data.get('address', {}).get('state'),
-                    postal_code=results_data.get('address', {}).get('postal_code'),
-                    logo_url=results_data.get('branding', {}).get('logo_url'),
-                    icon_url=results_data.get('branding', {}).get('icon_url')
-                )
+                results_data = data['results'] if 'results' in data else None
+                if results_data is not None:
+                    return CombinedCompanyResults(
+                        ticker=results_data.get('ticker'),
+                        name=results_data.get('name'),
+                        market=results_data.get('market'),
+                        locale=results_data.get('locale'),
+                        primary_exchange=results_data.get('primary_exchange'),
+                        type=results_data.get('type'),
+                        active=results_data.get('active'),
+                        currency_name=results_data.get('currency_name'),
+                        cik=results_data.get('cik'),
+                        composite_figi=results_data.get('composite_figi'),
+                        share_class_figi=results_data.get('share_class_figi'),
+                        market_cap=results_data.get('market_cap'),
+                        phone_number=results_data.get('phone_number'),
+                        description=results_data.get('description'),
+                        sic_code=results_data.get('sic_code'),
+                        sic_description=results_data.get('sic_description'),
+                        ticker_root=results_data.get('ticker_root'),
+                        homepage_url=results_data.get('homepage_url'),
+                        total_employees=results_data.get('total_employees'),
+                        list_date=results_data.get('list_date'),
+                        share_class_shares_outstanding=results_data.get('share_class_shares_outstanding'),
+                        weighted_shares_outstanding=results_data.get('weighted_shares_outstanding'),
+                        round_lot=results_data.get('round_lot'),
+                        address1=results_data.get('address', {}).get('address1'),
+                        city=results_data.get('address', {}).get('city'),
+                        state=results_data.get('address', {}).get('state'),
+                        postal_code=results_data.get('address', {}).get('postal_code'),
+                        logo_url=results_data.get('branding', {}).get('logo_url'),
+                        icon_url=results_data.get('branding', {}).get('icon_url')
+                    )
+                else:
+                    print(f'Couldnt get info for {ticker}')
 
     async def get_all_tickers(self, include_otc=False, save_all_tickers:bool=False) -> List[StockSnapshot]:
         """
