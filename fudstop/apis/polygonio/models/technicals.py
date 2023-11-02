@@ -5,26 +5,28 @@ import pandas as pd
 
 class RSI:
     def __init__(self, data, ticker):
-        results = data['results']
-        values = results.get('values')
+        self.as_dataframe = None
+        if 'results' in data:
+            results = data['results']
+            values = results.get('values')
 
-        self.rsi_value = [i.get('value') for i in values]
-        self.rsi_timestamp = [i.get('timestamp') for i in values]
+            self.rsi_value = [i.get('value') for i in values]
+            self.rsi_timestamp = [i.get('timestamp') for i in values]
 
-        # Convert timestamps to human-readable Eastern Time
-        self.rsi_timestamp = self.convert_to_human_readable(self.rsi_timestamp)
+            # Convert timestamps to human-readable Eastern Time
+            self.rsi_timestamp = self.convert_to_human_readable(self.rsi_timestamp)
 
-        self.data_dict = { 
+            self.data_dict = { 
 
-            'ticker': ticker,
+                'ticker': ticker,
 
-            'rsi_value': self.rsi_value,
+                'rsi_value': self.rsi_value,
 
-            'rsi_timestamp': self.rsi_timestamp
-        }
+                'rsi_timestamp': self.rsi_timestamp
+            }
 
 
-        self.as_dataframe = pd.DataFrame(self.data_dict)
+            self.as_dataframe = pd.DataFrame(self.data_dict)
         
     def convert_to_human_readable(self, timestamps):
         human_readable_times = []

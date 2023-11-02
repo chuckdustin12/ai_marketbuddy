@@ -24,23 +24,22 @@ import pytz
 from asyncio import Lock
 from datetime import timezone
 lock = Lock()
-password = os.environ.get('DB_PASSWORD') # Default password if not found in environment variables
 db_config_charlie = {
     "host": os.environ.get('DB_HOST'), # Default to this IP if 'DB_HOST' not found in environment variables
     "port": int(os.environ.get('DB_PORT')), # Default to 5432 if 'DB_PORT' not found
-    "user": 'chuck', # Default to 'postgres' if 'DB_USER' not found
-    "password": password, # Use the password from environment variable or default
-    "database": "charlie" # Database name for the new jawless database
+    "user": os.environ.get('DB_USER'), # Default to 'postgres' if 'DB_USER' not found
+    "password": os.environ.get('DB_PASSWORD'), # Use the password from environment variable or default
+    "database": os.environ.get('DB_NAME') # Database name for the new jawless database
 }
 
 db_options_chat_config =  { 
     "host": os.environ.get('DB_HOST'), # Default to this IP if 'DB_HOST' not found in environment variables
     "port": int(os.environ.get('DB_PORT')), # Default to 5432 if 'DB_PORT' not found
     "user": 'chuck', # Default to 'postgres' if 'DB_USER' not found
-    "password": password, # Use the password from environment variable or default
+    "password": os.environ.get('DB_PASSWORD'), # Use the password from environment variable or default
     "database": "options_database" # Database name for the new jawless database
 }
-class Charlie:
+class DatabaseManager:
     def __init__(self, host, port, user, password, database):
         self.conn = None
         self.pool = None

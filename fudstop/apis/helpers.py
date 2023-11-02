@@ -898,8 +898,15 @@ def last_unix_interval(threshold) -> int:
     unix_timestamp = int(time.mktime(last_30_min_interval.timetuple()))
 
     return unix_timestamp
+
+
+
+def remove_html_tags(text):
+    clean = re.compile('<.*?>')
+    return re.sub(clean, '', text)
 def convert_str_to_datetime(date_time_str):
     # Parsing time and date from the string
+    date_time_str = str(date_time_str)
     time_str, am_pm, _, _, month, day_with_comma, year = date_time_str.split()
 
     # Debug print for inspection
