@@ -1,3 +1,10 @@
+# NOTE: ALL OF YOUR KEYS / WEBHOOK URLS / DATABASE CONFIGURATION WILL GO IN THE .env FILE AT THE ROOT. 
+
+Add/adjust/remove as needed.
+
+
+
+
 #### to get your free stocksera key:
 https://stocksera.pythonanywhere.com/accounts/signup/
 
@@ -64,12 +71,26 @@ You can now import and use the nasdaq datalink functions.
 
 1. head over to https://www.polygon.io
 
-2. Sign up. Polygon offers a free tier for tinkering, as well as subscriptions for real-time data APIs and websocket clusters.
+2. Sign up. Polygon offers a free tier for tinkering, as well as subscriptions for real-time data APIs and websocket clusters.`
 
         When checking out - use code FUDSTOP at checkout to recieve a 10% discount on your order!
 
 
 3. After signing up - get your API key - post it in an .env file as: YOUR_POLYGON_KEY=key
 
+
+
+## To use the weather functions for the discord bot:
+
+1. Head over to https://openweathermap.org/api and sign up for an account. They offer a free API that should satisfy the majority of needs.
+
+2. Generate your API key and confirm email. It will work in about 1-2 hours after signing up.
+
+
+
+
+
+
+### ENV FILE SKELETON ###
 
 You can now use the robust polygon.io suite of tools, as well as the SDK kit for real-time market data analysis.
