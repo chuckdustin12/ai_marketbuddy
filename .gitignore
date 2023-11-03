@@ -11,3 +11,4 @@ build/
 .Python
 *.egg-info/
 cogs/
+git-filter-repo
