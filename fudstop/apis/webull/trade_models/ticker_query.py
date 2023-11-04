@@ -23,53 +23,53 @@ class WebullStockData:
         web_vibrate_ratio (float): The stock's price fluctuation ratio.
     """
     def __init__(self, r):
-        self.r=r
+        self.r = r
+        for i in self.r:
+            self.web_name = i.get("name", None)
+            self.web_symb = i.get("symbol", None)
+            self.web_exchange = i.get("disExchangeCode", None)
+            self.web_stock_close =i.get("close", None)
+            self.last_earnings = i.get('latestEarningsDate',None)
+            self.web_stock_vol =i.get("volume",None)
+            self.web_change_ratio = i.get("changeRatio", None)
+            self.web_stock_open =i.get("open",None)
+            self.web_stock_high =i.get("high", None)
+            self.web_stock_low =i.get("low", None)
+            self.fifty_high = i.get("fiftyTwoWkHigh", None)
+            self.avg_vol3m = i.get('avgVol3M')
+            self.fifty_low = i.get("fiftyTwoWkLow", None)
+            self.avg_10d_vol = i.get("avgVol10D", None)
+            self.outstanding_shares = i.get('outstandingShares', None)
+            self.total_shares = i.get('totalShares', None)
 
-        self.web_name = self.r.get("name", None)
-        self.web_symb = self.r.get("symbol", None)
-        self.web_exchange = self.r.get("disExchangeCode", None)
-        self.web_stock_close =self.r.get("close", None)
-        self.last_earnings = self.r.get('latestEarningsDate',None)
-        self.web_stock_vol =self.r.get("volume",None)
-        self.web_change_ratio = self.r.get("changeRatio", None)
-        self.web_stock_open =self.r.get("open",None)
-        self.web_stock_high =self.r.get("high", None)
-        self.web_stock_low =self.r.get("low", None)
-        self.fifty_high = self.r.get("fiftyTwoWkHigh", None)
-        self.avg_vol3m = self.r.get('avgVol3M')
-        self.fifty_low = self.r.get("fiftyTwoWkLow", None)
-        self.avg_10d_vol = self.r.get("avgVol10D", None)
-        self.outstanding_shares = self.r.get('outstandingShares', None)
-        self.total_shares = self.r.get('totalShares', None)
-
-        try:
-            self.estimated_earnings = self.r.get("nextEarningDay", None)
-            self.web_vibrate_ratio = self.r.get('vibrateRatio', None)
-        except KeyError:
-            self.estimated_earnings = None
-            self.web_vibrate_ratio = None
+            try:
+                self.estimated_earnings = i.get("nextEarningDay", None)
+                self.web_vibrate_ratio = i.get('vibrateRatio', None)
+            except KeyError:
+                self.estimated_earnings = None
+                self.web_vibrate_ratio = None
 
 
-        self.data_dict = {
-            'Company Name': self.r.get("name", None),
-            'Symbol': self.r.get("symbol", None),
-            'Exchange': self.r.get("disExchangeCode", None),
-            'Close Price': self.r.get("close", None),
-            'Latest Earnings': self.r.get('latestEarningsDate', None),
-            'Volume': self.r.get("volume", None),
-            'Change Ratio': self.r.get("changeRatio", None),
-            'Open Price': self.r.get("open", None),
-            'High Price': self.r.get("high", None),
-            'Low Price': self.r.get("low", None),
-            '52week High': self.r.get("fiftyTwoWkHigh", None),
-            'Avg 3month Volume': self.r.get('avgVol3M', None),
-            '52week Low': self.r.get("fiftyTwoWkLow", None),
-            'Avg 10day Volume': self.r.get("avgVol10D", None),
-            'Outstanding Shares': self.r.get('outstandingShares', None),
-            'Total Shares': self.r.get('totalShares', None)
-        }
+            #self.data_dict = {
+            #     'Company Name': i.get("name", None),
+            #     'Symbol': i.get("symbol", None),
+            #     'Exchange': i.get("disExchangeCode", None),
+            #     'Close Price': i.get("close", None),
+            #     'Latest Earnings': i.get('latestEarningsDate', None),
+            #     'Volume': i.get("volume", None),
+            #     'Change Ratio': i.get("changeRatio", None),
+            #     'Open Price': i.get("open", None),
+            #     'High Price': i.get("high", None),
+            #     'Low Price': i.get("low", None),
+            #     '52week High': i.get("fiftyTwoWkHigh", None),
+            #     'Avg 3month Volume': i.get('avgVol3M', None),
+            #     '52week Low': i.get("fiftyTwoWkLow", None),
+            #     'Avg 10day Volume': self.r.get("avgVol10D", None),
+            #     'Outstanding Shares': self.r.get('outstandingShares', None),
+            #     'Total Shares': self.r.get('totalShares', None)
+            # }
 
-        self.df = pd.DataFrame(self.data_dict, index=[0]).transpose()
+            # self.df = pd.DataFrame(self.data_dict, index=[0]).transpose()
 
 
 
