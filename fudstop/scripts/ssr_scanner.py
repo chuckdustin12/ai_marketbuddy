@@ -4,7 +4,7 @@ most_active_tickers = set(most_active_tickers)
 
 trading = WebullTrading()
 
-
+from discord_webhook import AsyncDiscordWebhook, DiscordEmbed
 
 import asyncio
 
@@ -25,6 +25,11 @@ async def ssr_feed(ticker):
         if change_ratio <= -10:
             print(f"{ticker} is currently on SSR. (declined by -10% or more) with a change ratio of {change_ratio}%")
 
+
+            hook = AsyncDiscordWebhook("https://discord.com/api/webhooks/1064077864330338424/ESvYk9hOKpwQrVWeStbCJRQ7HZL-kNCxwmoZ5pt8ASHQbHFYN4xB4zteBNCnKiiPCVFj",
+                                        content=f"{ticker} is currently on SSR. (declined by -10% or more) with a change ratio of {change_ratio}%")
+
+            await hook.execute()
 
 
 

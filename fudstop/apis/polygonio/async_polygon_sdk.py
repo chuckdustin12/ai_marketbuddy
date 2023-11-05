@@ -230,7 +230,7 @@ class Polygon:
                 return ticker_data
 
 
-    async def rsi(self, ticker:str, timespan:str, limit:str='1000', window:str='14', date_from:str=None, date_to:str=None):
+    async def rsi(self, ticker:str, timespan:str, limit:str='1000', window:int=14, date_from:str=None, date_to:str=None):
         """
         Arguments:
 
@@ -260,7 +260,7 @@ class Polygon:
             date_to = self.today
 
 
-        endpoint = f"https://api.polygon.io/v1/indicators/rsi/{ticker}?timespan={timespan}&timestamp.gte={date_from}&timestamp.lte={date_to}&limit={limit}&apiKey={self.api_key}"
+        endpoint = f"https://api.polygon.io/v1/indicators/rsi/{ticker}?timespan={timespan}&timestamp.gte={date_from}&timestamp.lte={date_to}&limit={limit}&window={window}&apiKey={self.api_key}"
 
         async with aiohttp.ClientSession() as session:
             async with session.get(endpoint) as resp:

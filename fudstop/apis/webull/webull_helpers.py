@@ -1,6 +1,43 @@
 from datetime import datetime, timedelta
 import pytz
-
+from typing import List, Union, Dict
+def convert_to_date(date_str):
+    try:
+        return datetime.strptime(date_str, '%Y-%m-%d').date()
+    except ValueError:
+        # Handle the error or return None if the string cannot be converted
+        return 
+def flatten(item, parent_key='', separator='_'):
+    if item is not None:
+        items = {}
+        if isinstance(item, dict):
+            for k, v in item.items():
+                new_key = f"{parent_key}{separator}{k}" if parent_key else k
+                if isinstance(v, dict):
+                    items.update(flatten(v, new_key, separator=separator))
+                elif isinstance(v, list):
+                    for i, elem in enumerate(v):
+                        items.update(flatten(elem, f"{new_key}_{i}", separator=separator))
+                else:
+                    items[new_key] = v
+        elif isinstance(item, list):
+            for i, elem in enumerate(item):
+                items.update(flatten(elem, f"{parent_key}_{i}", separator=separator))
+        else:
+            items[parent_key] = item
+        return items
+def flatten_list_of_dicts(lst: List[Union[Dict, List]]) -> List[Dict]:
+    return [flatten(item) for item in lst] if lst is not None else None
+def flatten_dict(d, parent_key='', sep='.'):
+    if d is not None:
+        items = {}
+        for k, v in d.items():
+            new_key = f"{parent_key}{sep}{k}" if parent_key else k
+            if isinstance(v, dict):
+                items.update(flatten_dict(v, new_key, sep=sep))
+            else:
+                items[new_key] = v
+        return items
 async def parse_most_active(ticker_entry):
 
     all_parsed_data = []

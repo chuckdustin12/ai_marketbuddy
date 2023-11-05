@@ -1,19 +1,35 @@
 import os
 
 import disnake
-from tabulate import tabulate
-from testicals import update_plot
-from disnake.ext import commands
 
+from disnake.ext import commands
+import asyncio
 import matplotlib.pyplot as plt
 import io
 import pandas as pd
-
+from cogs.database import MyModal
 from apis.polygonio.polygon_options import PolygonOptions
 from apis.gexbot.gexbot import GEXBot
 opts = PolygonOptions()
 gexbot = GEXBot()
 bot = commands.Bot(command_prefix="!", intents=disnake.Intents.all())
+
+
+from cogs.database import QueryView
+
+
+
+
+
+@bot.command()
+async def query(inter:disnake.AppCmdInter, ticker:str):
+    await inter.send(view=QueryView(ticker))
+
+
+@bot.command()
+async def test(ctx, ticker):
+    await ctx.send(view=QueryView(ticker))
+
 
 
 
@@ -61,16 +77,8 @@ async def skew(inter:disnake.AppCmdInter, ticker):
                 em = "🟢"
             await inter.edit_original_message(f"> {em} IV: {df[0]} | Skew: {df[1]} | Type: {df[2]} | Price: {df[3]}")
 
-import asyncio
-import aiohttp
-from gex import Gex,GexMajorLevels
 
 
-
-GEX_KEY = os.environ.get('GEXBOT')
-
-            
-from list_sets.ticker_lists import most_active_tickers
 
 
 @bot.slash_command()
@@ -141,7 +149,8 @@ async def all_gex(inter: disnake.AppCmdInter):
 
 
 async def run_gex():
-    tasks = [gex(i) for i in most_active_tickers]
+    gex_tickers = ['SPY','SPX','QQQ','AAPL','TSLA','MSFT','AMZN','NVDA']
+    tasks = [gex(i) for i in gex_tickers]
     await asyncio.gather(*tasks)
 
 

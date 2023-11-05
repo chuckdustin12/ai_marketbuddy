@@ -186,7 +186,7 @@ def get_human_readable_string(string):
         call_put = "CALL"
         strike_price = "380000"
 
-    expiry_date = month + '/' + day + '/' + '20' + year
+    expiry_date = '20' + year + '-' + month + '-' + day
     call_put = 'Call' if call_put == 'C' else 'Put'
     strike_price = float(strike_price) / 1000
     result['underlying_symbol'] = underlying_symbol
@@ -872,6 +872,8 @@ def flatten_dict(d, parent_key='', sep='.'):
         else:
             items[new_key] = v
     return items
+def rename_keys(original_dict, key_mapping):
+    return {key_mapping.get(k, k): v for k, v in original_dict.items()}
 
 async def chunks(lst, n):
     """Yield successive n-sized chunks from lst."""

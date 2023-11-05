@@ -33,9 +33,11 @@ class WebullTrading:
         self.timeframes = ['m1','m5', 'm10', 'm15', 'm20', 'm30', 'm60', 'm120', 'm240', 'd1']
 
         self.headers = {
+        "Access_token": "dc_us_tech1.18b823d6464-740891123215488abcbb16481b9d99c1",
         "App": "global",
         "App-Group": "broker",
         "Appid": "wb_web_app",
+        "Content-Type": "application/json",
         "Device-Type": "Web",
         "Did": "8tb5au1228olpj2jss5vittmtk7pcvf6",
         "Hl": "en",
