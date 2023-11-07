@@ -269,3 +269,28 @@ def format_date(input_str):
     # Format the output string
     output_str = eastern_datetime.strftime("%Y-%m-%d at %I:%M%p %Z")
     return output_str
+
+
+
+
+def calculate_setup(df):
+    setup_count = 0
+    for i in range(3, len(df)):
+        if df['Close'][i] > df['Close'][i-3]:  # Assuming 'c' is the close price column
+            setup_count += 1
+        else:
+            setup_count = 0
+        
+        if setup_count >= 9:
+            return True
+    return False
+def calculate_countdown(df):
+    countdown_count = 0
+    for i in range(4, len(df)):
+        if df['High'][i] > df['High'][i-2]:  # Assuming 'h' is the high price column
+            countdown_count += 1
+        else:
+            countdown_count = 0
+        
+        if countdown_count >= 9:
+            return True

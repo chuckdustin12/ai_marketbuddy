@@ -2,7 +2,7 @@ import asyncio
 from fudstop.apis.polygonio.async_polygon_sdk import Polygon
 from fudstop.list_sets.ticker_lists import most_active_tickers
 polygon = Polygon()
-async def rsi_test(ticker, timespan, window):
+async def get_2_4_8_rsi(ticker, timespan, window):
     windows_thresholds = {
         '2': (1, 99),  # (low_threshold, high_threshold)
         '4': (10, 90),
@@ -25,7 +25,7 @@ async def rsi_test(ticker, timespan, window):
 
 async def scan_2_4_8():
     windows = [2, 4, 8]
-    tasks = [rsi_test(ticker, 'day', window) for ticker in most_active_tickers for window in windows]
+    tasks = [get_2_4_8_rsi(ticker, 'day', window) for ticker in most_active_tickers for window in windows]
     results = await asyncio.gather(*tasks)
     
     # Filter out None results

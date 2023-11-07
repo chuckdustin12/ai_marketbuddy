@@ -1,3 +1,11 @@
+import sys
+from pathlib import Path
+
+# Add the project directory to the sys.path
+project_dir = str(Path(__file__).resolve().parents[2])
+if project_dir not in sys.path:
+    sys.path.append(project_dir)
+
 import os
 from dotenv import load_dotenv
 # Assuming we have the array of ticker IDs as numpy arrays from the user's environment
@@ -35,7 +43,33 @@ class WebullOptions:
         self.fifteen_days_from_now = (datetime.now() + timedelta(days=15)).strftime('%Y-%m-%d')
         self.eight_days_from_now = (datetime.now() + timedelta(days=8)).strftime('%Y-%m-%d')
         self.eight_days_ago = (datetime.now() - timedelta(days=8)).strftime('%Y-%m-%d')
-        self.headers = trading.headers
+        self.headers = {
+        "Access_token": "dc_us_tech1.18ba751f1ae-05a653bff5ec4b10a2da53487bd4dfb6",
+        "Accept": "*/*",
+        "App": "global",
+        "App-Group": "broker",
+        "Appid": "wb_web_app",
+        "Content-Type": "application/json",
+        "Device-Type": "Web",
+        "Did": "8tb5au1228olpj2jss5vittmtk7pcvf6",
+        "Hl": "en",
+        "Locale": "eng",
+        "Os": "web",
+        "Osv": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/118.0.0.0 Safari/537.36",
+        "Ph": "Windows Chrome",
+        "Platform": "web",
+        "Referer": "https://app.webull.com/",
+        "Reqid": "a9d8d422e0e84041a035fb2389f18dae",
+        "Sec-Ch-Ua": "\"Chromium\";v=\"118\", \"Google Chrome\";v=\"118\", \"Not=A?Brand\";v=\"99\"",
+        "Sec-Ch-Ua-Mobile": "?0",
+        "Sec-Ch-Ua-Platform": "\"Windows\"",
+        "T_time": "1698276695206",
+        "Tz": "America/Los_Angeles",
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/118.0.0.0 Safari/537.36",
+        "Ver": "3.40.11",
+        "X-S": "49ef20ad66d1e24a83ff8b2015bc13c6d133285c5665dbbe4aa6032572749931",
+        "X-Sv": "xodp2vg9"
+    }
 
         if connection_string is not None:
             connection_string = os.environ.get('WEBULL_OPTIONS')
@@ -381,6 +415,15 @@ class WebullOptions:
                 data = await resp.json()
                 if data is not None:
                     return VolumeAnalysis(data)
+                
+    # Initialize an HTTP session
+    async def test_vol_anal(self, ticker_id):
+        volume_analysis_url = f"https://quotes-gw.webullfintech.com/api/statistic/option/queryVolumeAnalysis?count=500&tickerId={ticker_id}"
+        async with aiohttp.ClientSession(headers=self.headers) as session:
+            async with session.get(volume_analysis_url) as resp:
+                data = await resp.json()
+                if data is not None:
+                    return VolumeAnalysis(data).trades_and_dates_dict
     async def insert_trades_and_dates(self, data):
         data['date'] = datetime.strptime(data['date'], '%Y-%m-%d')
         # Convert numeric strings to appropriate numeric types

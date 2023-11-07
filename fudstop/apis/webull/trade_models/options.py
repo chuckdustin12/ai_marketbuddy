@@ -153,6 +153,13 @@ class VolumeAnalysis:
                 df['option_id'] = self.option_id
                 df.set_index('option_id', inplace=True)
 
+            print(flattened_data)
+        self.trades_and_dates_dict = { 
+
+            'trades': trades,
+            'dates': dates
+        }
+
         self.data_dict = { 
 
             'ticker_id': self.ticker_id,
