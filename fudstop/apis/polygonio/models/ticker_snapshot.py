@@ -1,7 +1,14 @@
+import sys
+from pathlib import Path
+# Add the project directory to the sys.path
+project_dir = str(Path(__file__).resolve().parents[1])
+if project_dir not in sys.path:
+    sys.path.append(project_dir)
+
 from typing import List, Optional
 from dataclasses import dataclass, field
-from ...helpers import convert_datetime_list
-from ...polygonio.mapping import stock_condition_dict,STOCK_EXCHANGES
+from polygon_helpers import convert_datetime_list
+from polygonio.mapping import stock_condition_dict,STOCK_EXCHANGES
 from typing import Dict
 from datetime import datetime
 

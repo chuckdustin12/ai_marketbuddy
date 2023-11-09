@@ -1,10 +1,19 @@
+import sys
+from pathlib import Path
+
+# Add the project directory to the sys.path
+project_dir = str(Path(__file__).resolve().parents[1])
+if project_dir not in sys.path:
+    sys.path.append(project_dir)
+
+
 #import main libraries
 import asyncio
 from datetime import datetime
 from collections import deque
 from discord_webhook import AsyncDiscordWebhook, DiscordEmbed
 from polygon.websocket import WebSocketClient, Market, Feed
-from polygon import WebSocketClient
+from polygon.websocket import WebSocketClient
 
 
 #import configuration, helpers, and conversion mappings
@@ -18,7 +27,7 @@ from market_handlers.forex import handle_forex_msg
 from market_handlers.stocks import handle_msg
 from market_handlers.crypto import handle_crypto_msg
 from market_handlers.options import handle_option_msg
-from .market_handlers.indices import indices_handler
+#from market_handlers.indices import indices_handler
 
 #import the most active tickers
 from fudstop.list_sets.ticker_lists import most_active_tickers
@@ -35,7 +44,7 @@ markets = [Market.Options, Market.Stocks, Market.Indices, Market.Crypto, Market.
 subscription_patterns = {
     Market.Options: ["T.*,A.*"], #trades, aggregates
     Market.Stocks: ["A.*,T.*,Q.*"], #aggregates, trades, quotes
-    Market.Indices: ["AM.*"], # aggregates - per minute
+    #Market.Indices: ["AM.*"], # aggregates - per minute
     Market.Crypto: ['XT.*, XL2.*'], # crypto trades, level 2 book
     Market.Forex: ['CA.*, C.*'] # forex aggregates - per minute, forex quotes
 
@@ -45,7 +54,7 @@ subscription_patterns = {
 market_handlers = {
     Market.Stocks: handle_msg,
     Market.Options: handle_option_msg,
-    Market.Indices: indices_handler,
+    #Market.Indices: indices_handler,
     Market.Crypto: handle_crypto_msg,
     Market.Forex: handle_forex_msg
     }

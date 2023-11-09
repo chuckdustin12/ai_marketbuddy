@@ -147,8 +147,6 @@ async def scan_bars(ticker):
             except (TypeError, AttributeError, KeyError, ClientConnectorError,ClientOSError, httpx.ConnectError, httpx.ReadError):
                 continue
 
-        await asyncio.gather(*tasks)
-                
         
 
 async def scan_all_bars():
@@ -158,7 +156,7 @@ async def scan_all_bars():
     tasks = [scan_bars(i) for i in most_active_tickers]
 
 
-    return await asyncio.gather(*tasks)
+    await asyncio.gather(*tasks)
 
 
 

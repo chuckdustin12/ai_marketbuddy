@@ -2,9 +2,10 @@ import os
 from dotenv import load_dotenv
 
 load_dotenv()
-
+import random
 from fudstop.apis.helpers import map_stock_conditions, STOCK_EXCHANGES, stock_condition_dict, TAPES
 from fudstop.apis.helpers import format_large_number, convert_to_ns_datetime
+from fudstop.apis.polygonio.async_polygon_sdk import Polygon
 from fudstop.list_sets.ticker_lists import most_active_tickers
 from polygon.websocket import WebSocketClient, EquityTrade  
 from polygon.websocket.models import WebSocketMessage
@@ -12,6 +13,8 @@ from typing import List
 from discord_webhook import DiscordEmbed, DiscordWebhook
 # type: ignore
 import orjson
+from discord_webhook import AsyncDiscordWebhook, DiscordEmbed
+from list_sets.dicts import hex_color_dict
 import asyncio
 import asyncpg
 
@@ -20,7 +23,10 @@ import asyncpg
 class StockMarketLive:
     def __init__(self):
         self.pool = None
+        
         self.connection_string = os.environ.get('STOCK_MARKET')  # Use one environment variable for connection string
+        self.polygon = Polygon(connection_string=self.connection_string)
+        self.timespans = ['minute', 'hour', 'day', 'week', 'month']
 
         self.c = WebSocketClient(subscriptions=["T.*"], custom_json=orjson, api_key=os.environ.get('YOUR_POLYGON_KEY'))
 
@@ -115,8 +121,45 @@ class StockMarketLive:
 
 
                 await self.insert_trade(trade_data)
+                timespan=random.choice(self.timespans)
+                rsi_min_task = asyncio.create_task(self.polygon.rsi(ticker=message.symbol, timespan=random.choice(self.timespans)))
+     
+                rsi = await asyncio.gather(rsi_min_task)
+                rsi = rsi[0]
+                latest_rsi = None
+                if rsi is not None and rsi.rsi_value is not None:
+                    latest_rsi = rsi.rsi_value[0]
+                    print(latest_rsi)
+
+                if timespan == 'hour':
+                    hook = AsyncDiscordWebhook(os.environ.get('hour_osob'))
+
+                if timespan == 'day':
+                    hook = AsyncDiscordWebhook(os.environ.get('day_osob'))
 
 
+                if timespan == 'minute':
+                    hook = AsyncDiscordWebhook(os.environ.get('minute_osob'))
+
+                if timespan == 'week':
+                    hook = AsyncDiscordWebhook(os.environ.get('week_osob'))
+
+                if timespan == 'month':
+                    hook = AsyncDiscordWebhook(os.environ.get('month_osob'))
+
+                
+                if timespan is not None and hook is not None and latest_rsi is not None:
+                    color = hex_color_dict['green'] if latest_rsi <=30 else hex_color_dict['red'] if latest_rsi >= 70 else hex_color_dict['grey']
+                    status = 'oversold' if color == hex_color_dict['green'] else 'overbought' if color == hex_color_dict['red'] else None
+                    if status is not None:
+                        try:
+                            embed = DiscordEmbed(title=f"RSI Results - ALL {timespan}", description=f"```py\n{message.symbol} is {status} on the {timespan} with an RSI value of {latest_rsi}.```", color=color)
+                            embed.set_timestamp()
+                            embed.set_footer(f'overbought / oversold RSI feed - {timespan}')
+                            hook.add_embed(embed)
+                            await hook.execute()
+                        except TypeError:
+                            continue
 
 market = StockMarketLive()
 

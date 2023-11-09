@@ -29,7 +29,7 @@ db_config_charlie = {
     "port": int(os.environ.get('DB_PORT')), # Default to 5432 if 'DB_PORT' not found
     "user": os.environ.get('DB_USER'), # Default to 'postgres' if 'DB_USER' not found
     "password": os.environ.get('DB_PASSWORD'), # Use the password from environment variable or default
-    "database": os.environ.get('DB_NAME') # Database name for the new jawless database
+    "database": os.environ.get('POLYGON') # Database name for the new jawless database
 }
 
 db_options_chat_config =  { 
@@ -37,7 +37,7 @@ db_options_chat_config =  {
     "port": int(os.environ.get('DB_PORT')), # Default to 5432 if 'DB_PORT' not found
     "user": 'chuck', # Default to 'postgres' if 'DB_USER' not found
     "password": os.environ.get('DB_PASSWORD'), # Use the password from environment variable or default
-    "database": "options_database" # Database name for the new jawless database
+    "database": "POLYGON" # Database name for the new jawless database
 }
 class DatabaseManager:
     def __init__(self, host, port, user, password, database):
@@ -48,6 +48,7 @@ class DatabaseManager:
         self.user = user
         self.password = password
         self.database = database
+        print(self.database)
         self.connection_string = f"postgresql://{user}:{password}@{host}:{port}/{database}"
         
         self.chat_memory = []  # In-memory list to store chat messages
@@ -552,7 +553,7 @@ class DatabaseManager:
         values = ', '.join([f"${i+1}" for i in range(len(data))])
         
         query = f'INSERT INTO {table_name} ({fields}) VALUES ({values})'
-        
+        print(self.connection_string)
         async with self.pool.acquire() as conn:
             try:
                 await conn.execute(query, *data.values())

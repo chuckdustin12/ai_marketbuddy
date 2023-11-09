@@ -12,3 +12,8 @@ build/
 *.egg-info/
 cogs/
 git-filter-repo
+gpts/
+qfpewfoewk.py
+app.py
+templates/
+waitress_server

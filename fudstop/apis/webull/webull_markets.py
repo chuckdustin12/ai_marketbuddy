@@ -118,7 +118,7 @@ class WebullMarkets(DatabaseManager):
         return df
 
 
-    async def get_most_active(self, rank_type:str='rvol10d', as_dataframe:bool=True):
+    async def get_most_active(self, rank_type:str='rvol10d', as_dataframe:bool=False):
         """Rank types: 
         
         >>> volume
@@ -139,6 +139,8 @@ class WebullMarkets(DatabaseManager):
 
             await self.connect()
             await self.batch_insert_dataframe(df, table_name=f'most_active_{rank_type}', unique_columns='insertion_timestamp')
+        os.makedirs(f'data/top_active', exist_ok=True)
+
         df.to_csv(f'data/top_active/top_active_{rank_type}.csv', index=False)
         return df
 

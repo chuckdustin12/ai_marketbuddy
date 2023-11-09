@@ -3,6 +3,9 @@ import sys
 import pandas as pd
 from pathlib import Path
 import aiohttp
+import asyncio
+from asyncpg.exceptions import UniqueViolationError
+from asyncpg import create_pool
 from dotenv import load_dotenv
 load_dotenv()
 # Add the project directory to the sys.path
@@ -13,6 +16,7 @@ from urllib.parse import urlencode
 from datetime import datetime, timedelta
 from webull.webull_trading import WebullTrading
 from .models.option_models.universal_snapshot import UniversalOptionSnapshot
+from .models.option_models.option_snapshot import OptionSnapshotData
 from .polygon_helpers import flatten_nested_dict, flatten_dict
 
 trading = WebullTrading()
@@ -20,6 +24,12 @@ trading = WebullTrading()
 class PolygonOptions:
     def __init__(self, connection_string=None):
         self.connection_string = connection_string
+        self.host = os.environ.get('DB_HOST')
+        self.port = os.environ.get('DB_PORT')
+        self.user = os.environ.get('DB_USER')
+        self.password = os.environ.get('DB_PASSWORD')
+        self.database = os.environ.get('POLYGON')
+
         self.api_key = os.environ.get('YOUR_POLYGON_KEY')
         self.today = datetime.now().strftime('%Y-%m-%d')
         self.yesterday = (datetime.now() - timedelta(days=1)).strftime('%Y-%m-%d')
@@ -32,7 +42,40 @@ class PolygonOptions:
         self.eight_days_ago = (datetime.now() - timedelta(days=8)).strftime('%Y-%m-%d')
         self.one_year_from_now = (datetime.now() + timedelta(days=365)).strftime('%Y-%m-%d')
         self.one_year_ago = (datetime.now() - timedelta(days=365)).strftime('%Y-%m-%d')
+    async def connect(self, connection_string=None):
+            if connection_string:
+                self.pool = await create_pool(
+                    dsn=connection_string, min_size=1, max_size=10
+                )
+            else:
+                self.pool = await create_pool(
+                    host=self.host,
+                    port=self.port,
+                    user=self.user,
+                    password=self.password,
+                    database=self.database,
+                    min_size=1,
+                    max_size=10
+                )
+            return self.pool
 
+    async def save_structured_messages(self, data_list: list[dict], table_name: str):
+        if not data_list:
+            return  # No data to insert
+
+        # Assuming all dicts in data_list have the same keys
+        fields = ', '.join(data_list[0].keys())
+        values_placeholder = ', '.join([f"${i+1}" for i in range(len(data_list[0]))])
+        values = ', '.join([f"({values_placeholder})" for _ in data_list])
+        
+        query = f'INSERT INTO {table_name} ({fields}) VALUES {values}'
+        print(self.connection_string)
+        async with self.pool.acquire() as conn:
+            try:
+                flattened_values = [value for item in data_list for value in item.values()]
+                await conn.execute(query, *flattened_values)
+            except UniqueViolationError:
+                print('Duplicate - Skipping')
 
 
     async def paginate_concurrent(self, url, as_dataframe=False, concurrency=25):
@@ -71,17 +114,14 @@ class PolygonOptions:
 
 
 
-    async def fetch_page(self,url):
-        try:
-            async with aiohttp.ClientSession() as session, session.get(url) as response:
+    #
+
+    async def fetch_page(self, url):
+        async with aiohttp.ClientSession() as session:
+            async with session.get(url) as response:
                 response.raise_for_status()
                 return await response.json()
-        except TimeoutError:
-            print(f"Timeout when accessing {url}")
-        except aiohttp.ClientResponseError as http_err:
-            print(f"HTTP error occurred: {http_err}")
-        except Exception as err:
-            print(f"An error occurred: {err}")
+    
 
     async def fetch_endpoint(self, endpoint, params=None):
         """
@@ -280,40 +320,24 @@ class PolygonOptions:
                     continue
 
 
+    async def get_option_chain_all(self, underlying_asset, strike_price=None, expiration_date=None, contract_type=None, order=None, limit=250, sort=None):
+        """
+        Get all options contracts for an underlying ticker across all pages.
 
+        :param underlying_asset: The underlying ticker symbol of the option contract.
+        :param strike_price: Query by strike price of a contract.
+        :param expiration_date: Query by contract expiration with date format YYYY-MM-DD.
+        :param contract_type: Query by the type of contract.
+        :param order: Order results based on the sort field.
+        :param limit: Limit the number of results returned, default is 10 and max is 250.
+        :param sort: Sort field used for ordering.
+        :return: A list containing all option chain data across all pages.
+        """
+        endpoint = f"https://api.polygon.io/v3/snapshot/options/{underlying_asset}?limit=250&apiKey={self.api_key}"
 
-import asyncio
-async def test():
-    opts = PolygonOptions()
-    while True:
-        data = await opts.get_near_the_money_single(ticker='SPY', exp_less_than='2023-11-03')
-        
+        async with aiohttp.ClientSession() as session:
+            response_data = await self.paginate_concurrent(endpoint)
+            print(endpoint) #passing endpoint to paginate_concurrent
+            option_data = OptionSnapshotData(response_data)
 
-        
-        snapshot = await opts.get_universal_snapshot(data)
-        df = pd.DataFrame(snapshot)
-      
-        print()
-        # Ensure the columns you want to use are in the DataFrame
-        columns_to_use = ['implied_volatility', 'details.strike_price', 'details.expiration_date', 'underlying_asset.price']
-
-        # Check if all desired columns are present in the DataFrame
-        missing_columns = [col for col in columns_to_use if col not in df.columns]
-        if missing_columns:
-            print(f"Warning: Missing columns {missing_columns} in the dataframe. These will be skipped.")
-            columns_to_use = [col for col in columns_to_use if col in df.columns]
-
-        # If none of the columns are present, we shouldn't proceed
-        if not columns_to_use:
-            raise ValueError("None of the specified columns are present in the dataframe.")
-
-        # If there are valid columns to use, proceed with sorting and selecting the top row
-        if columns_to_use:
-            # Sort by 'implied_volatility' in descending order and select the top row
-            top_row = df.sort_values('implied_volatility', ascending=False).iloc[0]
-
-            # Create a list with only the selected columns' values
-            selected_values = [top_row[col] for col in columns_to_use]
-            df = [selected_values]
-            df = df[0]
-            print(f"IV: {df[0]} | Skew: {df[1]} | Price: {df[2]}")
+            return option_data

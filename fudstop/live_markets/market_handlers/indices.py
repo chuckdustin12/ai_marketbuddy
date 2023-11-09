@@ -1,3 +1,11 @@
+import sys
+from pathlib import Path
+
+# Add the project directory to the sys.path
+project_dir = str(Path(__file__).resolve().parents[1])
+if project_dir not in sys.path:
+    sys.path.append(project_dir)
+
 from polygon.websocket import WebSocketMessage
 from fudstop.apis.helpers import convert_to_ns_datetime
 import asyncio

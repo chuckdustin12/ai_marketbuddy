@@ -1,6 +1,6 @@
 import sys
 from pathlib import Path
-
+from asyncpg.exceptions import UniqueViolationError
 # Add the project directory to the sys.path
 project_dir = str(Path(__file__).resolve().parents[2])
 if project_dir not in sys.path:
@@ -8,9 +8,13 @@ if project_dir not in sys.path:
 
 from dotenv import load_dotenv
 load_dotenv()
+from asyncpg import create_pool
 
 import os
 from typing import List, Dict
+
+import asyncio
+from aiohttp.client_exceptions import ClientConnectorError, ClientOSError, ClientConnectionError, ContentTypeError
 
 from .models.aggregates import AggregatesData
 from .models.ticker_news import TickerNews
@@ -42,6 +46,34 @@ class Polygon:
         self.eight_days_from_now = (datetime.now() + timedelta(days=8)).strftime('%Y-%m-%d')
         self.eight_days_ago = (datetime.now() - timedelta(days=8)).strftime('%Y-%m-%d')
 
+    async def connect(self, connection_string=None):
+            if connection_string:
+                self.pool = await create_pool(
+                    dsn=connection_string, min_size=1, max_size=10
+                )
+            else:
+                self.pool = await create_pool(
+                    host=self.host,
+                    port=self.port,
+                    user=self.user,
+                    password=self.password,
+                    database=self.database,
+                    min_size=1,
+                    max_size=10
+                )
+            return self.pool
+
+    async def save_structured_message(self, data: dict, table_name: str):
+        fields = ', '.join(data.keys())
+        values = ', '.join([f"${i+1}" for i in range(len(data))])
+        
+        query = f'INSERT INTO {table_name} ({fields}) VALUES ({values})'
+        print(self.connection_string)
+        async with self.pool.acquire() as conn:
+            try:
+                await conn.execute(query, *data.values())
+            except UniqueViolationError:
+                print('Duplicate - SKipping')
 
     async def fetch_endpoint(self, endpoint, params=None):
         # Build the query parameters
@@ -230,7 +262,7 @@ class Polygon:
                 return ticker_data
 
 
-    async def rsi(self, ticker:str, timespan:str, limit:str='1000', window:int=14, date_from:str=None, date_to:str=None):
+    async def rsi(self, ticker:str, timespan:str, limit:str='1000', window:int=14, date_from:str=None, date_to:str=None, session=None):
         """
         Arguments:
 
@@ -261,14 +293,20 @@ class Polygon:
 
 
         endpoint = f"https://api.polygon.io/v1/indicators/rsi/{ticker}?timespan={timespan}&timestamp.gte={date_from}&timestamp.lte={date_to}&limit={limit}&window={window}&apiKey={self.api_key}"
-
+        print(endpoint)
         async with aiohttp.ClientSession() as session:
-            async with session.get(endpoint) as resp:
-                datas = await resp.json()
+            try:
+                async with session.get(endpoint) as resp:
+                    datas = await resp.json()
+                    if datas is not None:
 
-
-                return RSI(datas, ticker)
-            
+                        
+  
+                
+                        return RSI(datas, ticker)
+            except (ClientConnectorError, ClientOSError, ContentTypeError):
+                print(f"ERROR - {ticker}")
+                
 
 
     async def sma(self, ticker:str, timespan:str, limit:str='1000', window:str='9', date_from:str=None, date_to:str=None):
@@ -312,7 +350,7 @@ class Polygon:
             
 
 
-    async def ema(self, ticker:str, timespan:str, limit:str='1000', window:str='21', date_from:str=None, date_to:str=None):
+    async def ema(self, ticker:str, timespan:str, limit:str='1', window:str='21', date_from:str=None, date_to:str=None):
         """
         Arguments:
 
@@ -386,3 +424,34 @@ class Polygon:
                     print(f"An unexpected error occurred: {e}")  # Consider logging this
                     continue
 
+
+
+
+
+    async def gather_rsi_for_all_tickers(self, tickers) -> List[RSI]:
+
+        """Get RSI for all tickers
+        
+        Arguments:
+
+        >>> tickers: A list of tickers
+
+
+        >>> timespan: 
+
+           minute
+           hour
+           day
+           week
+           month
+           year
+           quaeter
+        
+        """
+        async with aiohttp.ClientSession() as session:
+            timespans = ['minute', 'hour', 'day', 'week']
+            timespan = 'hour'
+            tasks = [self.rsi(ticker, timespan) for ticker in tickers for timespan in timespans]
+            await asyncio.gather(*tasks)
+                
+              
