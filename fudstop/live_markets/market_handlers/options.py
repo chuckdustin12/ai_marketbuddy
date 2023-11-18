@@ -3,13 +3,13 @@ import pytz
 from pytz import timezone
 from discord_webhook import AsyncDiscordWebhook, DiscordEmbed
 import asyncio
-from fudstop.apis.polygonio.mapping import OPTIONS_EXCHANGES, option_condition_desc_dict, option_condition_dict
+from apis.polygonio.mapping import OPTIONS_EXCHANGES, option_condition_desc_dict, option_condition_dict
 from datetime import datetime
 from math import isnan
 from datetime import timezone
 from .cfg import hex_colors
-from fudstop.apis.helpers import calculate_price_to_strike, get_human_readable_string
-from fudstop.list_sets.ticker_lists import most_active_tickers
+from apis.helpers import calculate_price_to_strike, get_human_readable_string
+from list_sets.ticker_lists import most_active_tickers
 from pytz import timezone
 most_active_tickers = set(most_active_tickers)
 batch_data_aggs = []

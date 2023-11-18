@@ -67,7 +67,7 @@ class Search:
 
         self.as_dataframe = pd.DataFrame(self.data_dict)
 
-        self.as_dataframe.to_csv('fudstop/data/fed_print/search_results.csv', index=False)
+        #self.as_dataframe.to_csv('fudstop/data/fed_print/search_results.csv', index=False)
 
 
 
@@ -108,7 +108,7 @@ class Item:
 
         self.as_dataframe = pd.DataFrame(self.data_dict)
 
-        self.as_dataframe.to_csv('fudstop/data/fed_print/item.csv', index=False)
+        #self.as_dataframe.to_csv('fudstop/data/fed_print/item.csv', index=False)
 
 
 
@@ -152,4 +152,4 @@ class SingleItem:
 
         self.as_dataframe = pd.DataFrame(self.data_dict, index=[0])
 
-        self.as_dataframe.to_csv('fudstop/data/fed_print/item.csv', index=False)
+        #self.as_dataframe.to_csv('fudstop/data/fed_print/item.csv', index=False)

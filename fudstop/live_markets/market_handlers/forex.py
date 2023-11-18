@@ -8,7 +8,7 @@ batch_data_aggs = []
 batch_data_trades = []
 
 from pytz import timezone
-from fudstop.apis.helpers import convert_to_ns_datetime
+from apis.helpers import convert_to_ns_datetime
 utc = timezone('UTC')
 aware_datetime = utc.localize(datetime.utcnow())
 

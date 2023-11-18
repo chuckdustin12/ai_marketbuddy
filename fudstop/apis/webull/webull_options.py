@@ -1,30 +1,32 @@
 import sys
 from pathlib import Path
 
-# Add the project directory to the sys.path
-project_dir = str(Path(__file__).resolve().parents[2])
-if project_dir not in sys.path:
-    sys.path.append(project_dir)
+
+
 
 import os
 from dotenv import load_dotenv
+load_dotenv()
 # Assuming we have the array of ticker IDs as numpy arrays from the user's environment
 import numpy as np
-from fudstop.apis.webull.webull_helpers import convert_to_date
 from aiohttp.client_exceptions import ContentTypeError
-from fudstop.apis.webull.trade_models.options import WebullOptionsData, VolumeAnalysis
+from .options import WebullOptionsData, VolumeAnalysis
 import aiohttp
 import asyncio
 import json
 import asyncpg
-load_dotenv()
-GEX_KEY = os.environ.get('GEXBOT')
 
+GEX_KEY = os.environ.get('GEXBOT')
+def convert_to_date(date_str):
+    try:
+        return datetime.strptime(date_str, '%Y-%m-%d').date()
+    except ValueError:
+        # Handle the error or return None if the string cannot be converted
+        return 
 print(GEX_KEY)
 
-from list_sets.ticker_lists import most_active_tickers
-most_active_tickers = set(most_active_tickers)
-from fudstop.apis.webull.webull_trading import WebullTrading
+
+from webull.webull_trading import WebullTrading
 from datetime import datetime, timedelta
 
 trading = WebullTrading()
@@ -32,6 +34,11 @@ trading = WebullTrading()
 class WebullOptions:
     def __init__(self, connection_string = None):
         self.pool = None
+        self.most_active_tickers = ['SPY', 'QQQ', 'SPX', 'TSLA', 'AMZN', 'IWM', 'NVDA', 'VIX', 'AAPL', 'F', 'META', 'MSFT', 'GOOGL', 'HYG', 'INTC', 'SQQQ', 'AMD', 'TQQQ', 'XLF', 'BAC', 'XLI', 'TLT', 'GOOG', 'GLD', 'SOFI', 'EEM', 'EFA', 'UVXY', 'NFLX', 'ENPH', 'SQ', 'COIN', 'CVX', 'PLTR', 'XBI', 'FXI', 'XOM', 'VXX', 'PYPL', 'GDX', 'AAL', 'MARA', 'JPM', 'XLE', 'EWZ', 'PFE', 'BABA', 'AMC', 'SLV', 'SOXL', 'DIS', 'UBER', 'DIA', 'GM', 'CVNA', 'RIVN', 'RIOT', 'VALE', 'KRE', 'C', 'VZ', 'USO', 'BA', 'ARKK', 'X', 'MPW', 'XSP', 'NIO', 'SNAP', 'RUT', 'KVUE', 'EDR', 'SHOP', 'SMH', 'BMY', 'JNJ', 'KWEB', 'CHPT', 'MRNA', 'BITO', 'GOLD', 'ZM', 'T', 'NEM', 'ET', 'KO', 'PBR', 'MS', 'SCHW', 'OXY', 'MU', 'DKNG', 'RIG', 'MO', 'WFC', 'NDX', 'VFS', 'XLU', 'BKLN', 'MCD', 'ABBV', 'JBLU', 'FSLR', 'AI', 'LCID', 'SNOW', 'ABNB', 'TNA', 'DVN', 'DAL', 'RTX', 'JD', 'UNG', 'RBLX', 'TGT', 'ADBE', 'UPS', 'WDC', 'LUV', 'TSM', 'UAL', 'PAA', 'ORCL', 'PLUG', 'GS', 'LQD', 'CCL', 'LABU', 'EPD', 'WE', 'AFRM', 'XPO', 'MSOS', 'IBM', 'XLV', 'NKE', 'MSTR', 'COST', 'QCOM', 'HD', 'CSCO', 'AVGO', 'SPXS', 'CLF', 'TFC', 'GME', 'ON', 'CVS', 'CMG', 'SPXU', 'AGNC', 'XLY', 'COF', 'FCX', 'PDD', 'WMT', 'MTCH', 'NEE', 'XOP', 'CRM', 'ROKU', 'MA', 'RUN', 'SBUX', 'PARA', 'SE', 'V', 'SAVE', 'UPST', 'DXCM', 'LLY', 'NCLH', 'ABT', 'AXP', 'ABR', 'CHWY', 'AA', 'DDOG', 'SVXY', 'LYFT', 'RCL', 'HOOD', 'BEKE', 'IBB', 'LI', 'PINS', 'PANW', 'ETSY', 'YINN', 'SAVA', 'OIH', 'WBA', 'TXN', 'FEZ', 'PG', 'CCJ', 'BOIL', 'SMCI', 'ALGN', 'XLP', 'CRWD', 'GE', 'MRVL', 'BX', 'WBD', 'SOXS', 'MRK', 'W', 'UVIX', 'SPXL', 'FSR', 'TZA', 'URNM', 'CAT', 'PEP', 'IMGN', 'XPEV', 'LULU', 'CVE', 'TTD', 'CMCSA', 'BIDU', 'NLY', 'AX', 'XRT', 'AG', 'BYND', 'BRK B', 'HL', 'M', 'NWL', 'SEDG', 'SIRI', 'EBAY', 'FLEX', 'BTU', 'NKLA', 'DISH', 'MDT', 'PSEC', 'VMW', 'ZS', 'COP', 'DG', 'AMAT', 'UCO', 'MDB', 'SLB', 'PTON', 'OKTA', 'U', 'HSBC', 'XHB', 'TMUS', 'UNH', 'OSTK', 'CGC', 'NOW', 'TLRY', 'DOCU', 'TDOC', 'MMM', 'HPQ', 'PCG', 'CHTR', 'Z', 'LOW', 'PENN', 'LMT', 'WOLF', 'KMI', 'VLO', 'SPWR', 'XLK', 'DLTR', 'WHR', 'NVAX', 'ARM', 'JETS', 'VNQ', 'DE', 'DLR', 'NET', 'FAS', 'WPM', 'DASH', 'ACN', 'ASHR', 'FUBO', 'CLX', 'ADM', 'SRPT', 'MRO', 'KGC', 'DPST', 'TWLO', 'AR', 'CNC', 'FDX', 'AMGN', 'VRT', 'CLSK', 'EMB', 'KOLD', 'CD', 'HES', 'SPOT', 'XLC', 'ZIM', 'GILD', 'EQT', 'CRSP', 'GDXJ', 'STNG', 'NAT', 'HAL', 'SGEN', 'GPS', 'USB', 'QS', 'UPRO', 'KSS', 'IDXX', 'FTNT', 'BALL', 'TMF', 'PACW', 'EL', 'MULN', 'NVO', 'GDDY', 'BBY', 'SPCE', 'SNY', 'KEY', 'MGM', 'FREY', 'CZR', 'LVS', 'TTWO', 'LRCX', 'MXEF', 'PAGP', 'ANET', 'VFC', 'GRPN', 'EW', 'BKNG', 'EOSE', 'TMO', 'SPY', 'SPX', 'QQQ', 'VIX', 'IWM', 'TSLA', 'HYG', 'AMZN', 'AAPL', 'BAC', 'XLF', 'TLT', 'SLV', 'EEM', 'F', 'NVDA', 'GOOGL', 'AMD', 'AAL', 'META', 'INTC', 'PLTR', 'C', 'GLD', 'MSFT', 'GDX', 'FXI', 'VALE', 'GOOG', 'XLE', 'SOFI', 'BABA', 'NIO', 'PFE', 'EWZ', 'PYPL', 'T', 'CCL', 'SNAP', 'DIS', 'GM', 'NKLA', 'WFC', 'TQQQ', 'AMC', 'UBER', 'RIVN', 'KRE', 'PBR', 'XOM', 'LCID', 'MARA', 'JPM', 'GOLD', 'ET', 'PLUG', 'JD', 'VZ', 'WBD', 'EFA', 'KVUE', 'RIG', 'SQ', 'CHPT', 'KWEB', 'KO', 'MU', 'BITO', 'TSM', 'SQQQ', 'SHOP', 'DKNG', 'CSCO', 'XLU', 'COIN', 'MPW', 'OXY', 'SOXL', 'FCX', 'RIOT', 'DAL', 'SCHW', 'TLRY', 'BA', 'NFLX', 'UAL', 'SIRI', 'MS', 'AGNC', 'UVXY', 'XBI', 'PARA', 'ARKK', 'CMCSA', 'DVN', 'UNG', 'VXX', 'CVX', 'CLF', 'RBLX', 'PINS', 'XLI', 'SE', 'CVNA', 'QCOM', 'SGEN', 'USO', 'TMF', 'BMY', 'RTX', 'XSP', 'ORCL', 'WBA', 'NKE', 'PDD', 'X', 'KMI', 'GME', 'NCLH', 'NEM', 'SMH', 'MSOS', 'TEVA', 'M', 'XPEV', 'ABBV', 'JETS', 'ABNB', 'MULN', 'JNJ', 'MO', 'CVS', 'AFRM', 'LUV', 'NEE', 'FSR', 'AI', 'SAVE', 'JBLU', 'HOOD', 'ENPH', 'DIA', 'WMT', 'LYFT', 'NU', 'BP', 'XOP', 'ENVX', 'SPCE', 'NOK', 'GRAB', 'BYND', 'ZM', 'SLB', 'NVAX', 'U', 'MRVL', 'CCJ', 'OPEN', 'CRM', 'CGC', 'AA', 'V', 'IBM', 'PTON', 'SBUX', 'LABU', 'TGT', 'STNE', 'BRK B', 'ASHR', 'UPST', 'QS', 'MRK', 'MRNA', 'VFS', 'XHB', 'TMUS', 'SNOW', 'PANW', 'VFC', 'UPS', 'BX', 'DISH', 'USB', 'TFC', 'GE', 'COP', 'LI', 'MET', 'XRT', 'ROKU', 'XLP', 'CHWY', 'FSLR', 'PG', 'XLK', 'FUBO', 'XLV', 'W', 'AMAT', 'GOEV', 'TXN', 'PEP', 'RUN', 'SWN', 'DOW', 'HD', 'GS', 'KGC', 'Z', 'AG', 'ABR', 'CAT', 'UUP', 'AXP', 'ZIM', 'KHC', 'RCL', 'LAZR', 'BOIL', 'DDOG', 'PENN', 'TTD', 'TELL', 'XLY', 'EPD', 'CRWD', 'VMW', 'NYCB', 'HUT', 'BTU', 'DOCU', 'NET', 'BKLN', 'SU', 'BAX', 'ETSY', 'HE', 'BTG', 'NLY', 'BHC', 'TDOC', 'LUMN', 'CLSK', 'MCD', 'LVS', 'MMM', 'DM', 'ALLY', 'SPWR', 'VRT', 'ABT', 'DASH', 'ADBE', 'TNA', 'MA', 'ACB', 'MDT', 'MGM', 'COST', 'WDC', 'GSAT', 'GPS', 'ON', 'MRO', 'PAAS', 'EOSE', 'LQD', 'BILI', 'AR', 'ONON', 'HTZ', 'TWLO', 'GILD', 'MMAT', 'ASTS', 'STLA', 'LLY', 'SABR', 'BIDU', 'EDR', 'AVGO', 'HAL', 'DG', 'WYNN', 'AEM', 'PATH', 'DB', 'IYR', 'UNH', 'HL', 'IEF', 'SPXS', 'CPNG', 'URA', 'NVO', 'BITF', 'URNM', 'KSS', 'FTCH', 'KEY', 'TH', 'GEO', 'FDX', 'CL', 'AZN', 'HPQ', 'DNN', 'BSX', 'SHEL', 'DXCM', 'PCG', 'BEKE', 'DNA', 'PM', 'TTWO', 'IQ', 'WE', 'ALB', 'SAVA', 'GDXJ', 'SPXU', 'OSTK', 'COF', 'SNDL', 'OKTA', 'BXMT', 'UEC', 'VLO', 'KR', 'ZION', 'WW', 'RSP', 'XP', 'IAU', 'LULU', 'ARCC', 'SOXS', 'VOD', 'TJX', 'MOS', 'EQT', 'IONQ', 'STNG', 'NOVA', 'HLF', 'HSBC', 'ARM']
+        self.most_active_tickers = set(self.most_active_tickers)
+        self.gex_tickers = ['SPY','SPX','QQQ','AAPL','TSLA','MSFT','AMZN','NVDA']
+        self.as_dataframe = None
+        self.db_url = connection_string
         self.connection_string = connection_string
         self.api_key = os.environ.get('YOUR_POLYGON_KEY')
         self.today = datetime.now().strftime('%Y-%m-%d')
@@ -71,8 +78,7 @@ class WebullOptions:
         "X-Sv": "xodp2vg9"
     }
 
-        if connection_string is not None:
-            connection_string = os.environ.get('WEBULL_OPTIONS')
+
     async def connect(self):
         self.pool = await asyncpg.create_pool(
             dsn=self.connection_string, min_size=1, max_size=10
@@ -93,6 +99,7 @@ class WebullOptions:
 
     async def batch_insert_options(self, pairs):
         try:
+            await self.connect()
             async with self.pool.acquire() as conn:  # Acquire a connection from the pool
 
                 async with conn.transaction():  # Start a transaction
@@ -350,7 +357,7 @@ class WebullOptions:
     async def get_option_data_for_ticker(self, ticker):
         print(f"Starting processing for ticker: {ticker}")
         dataframes = []  # Initialize a list to collect DataFrames
-
+  
         async for info in self.yield_batch_ids(ticker_symbol=ticker):
             print(f"Processing batch ID: {info} for ticker: {ticker}")
             url = f"https://quotes-gw.webullfintech.com/api/quote/option/quotes/queryBatch?derivativeIds={info}"
@@ -361,9 +368,12 @@ class WebullOptions:
                         print(f"No more data for ticker: {ticker}. Moving to next.")
                         break
                     wb_data = WebullOptionsData(data)
-                    df = wb_data.as_dataframe
-                    df['ticker'] = ticker
-                    await self.insert_dataframe_in_batches(df, 'options_data')
+                    if self.as_dataframe is not None:
+                        df = wb_data.as_dataframe
+                        df['ticker'] = ticker
+                        df = df.rename(columns={'open_interest_change': 'oi_change'})
+                        
+                        await self.insert_dataframe_in_batches(df, 'options_data')
             
         print(f"Finished processing for ticker: {ticker}")
 
@@ -458,7 +468,11 @@ class WebullOptions:
                 VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
             """, data.get('ticker_id'), data.get('symbol', None), data.get('option_id', None), data.get('total_trades', None), data.get('total_volume', None), data.get('avg_price',None),data.get('buy_volume',None), data.get('sell_volume', None), data.get('neutral_volume', None), data.get('option_symbol', None), data.get('strike_price') , data.get('call_put'), data.get('expiry_date')        )
         
+    async def run_all_tasks(self, tickers):
 
+        async with aiohttp.ClientSession(headers=self.headers) as session:
+            tasks = [self.get_option_data_for_ticker(ticker, session) for ticker in tickers]
+            await asyncio.gather(*tasks)
     async def store_options_data(self):
         await self.connect()
         semaphore = asyncio.Semaphore(5)  # Adjust the number to limit concurrent tasks
@@ -467,7 +481,7 @@ class WebullOptions:
             async with semaphore:
                 return await self.get_option_data_for_ticker(ticker)
 
-        tasks = [limited_get_option_data_for_ticker(i) for i in most_active_tickers]
+        tasks = [limited_get_option_data_for_ticker(i) for i in self.most_active_tickers]
         await asyncio.gather(*tasks)
 
     async def close_pool(self):

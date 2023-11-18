@@ -1,10 +1,17 @@
 import sys
+from pathlib import Path
+
+# Add the project directory to the sys.path
+project_dir = str(Path(__file__).resolve().parents[1])
+if project_dir not in sys.path:
+    sys.path.append(project_dir)
+
 import os
 
-sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
+from dotenv import load_dotenv
+load_dotenv()
 
-
-from fudstop.apis.polygonio.mapping import option_condition_dict, OPTIONS_EXCHANGES
+from apis.polygonio.mapping import option_condition_dict, OPTIONS_EXCHANGES
 from list_sets.ticker_lists import most_active_tickers
 
 from apis.helpers import flatten_dict
@@ -158,7 +165,7 @@ async def get_universal_snapshot(ticker, retries=1): #✅
     for retry in range(retries):
        # async with sema:
         url = f"https://api.polygon.io/v3/snapshot?ticker.any_of={ticker}&apiKey={YOUR_API_KEY}&limit=250"
-
+        print(url)
         
         async with aiohttp.ClientSession(timeout=timeout) as session:
             try:
@@ -286,37 +293,37 @@ async def process_symbol(symbol):
     data = await get_universal_snapshot(symbol)
 
     if data is not None:
-        await asyncio.gather(*[process_contract(contract) for contract in data])
-async def main():
+        return await asyncio.gather(*[process_contract(contract) for contract in data])
+# async def main():
    
-    print("Database connected.")
+#     print("Database connected.")
 
-    tasks = []
-    batch_size = 8  # You can adjust this number based on your needs
+#     tasks = []
+#     batch_size = 8  # You can adjust this number based on your needs
 
-    for symbol in most_active_tickers:
-        print(f"Preparing task for symbol: {symbol}")
-        tasks.append(process_symbol(symbol))
+#     for symbol in most_active_tickers:
+#         print(f"Preparing task for symbol: {symbol}")
+#         tasks.append(process_symbol(symbol))
 
-        if len(tasks) >= batch_size:
-            try:
-                print(f"Executing batch of {batch_size} tasks.")
-                await asyncio.gather(*tasks)
-                print(f"Completed batch of {batch_size} tasks.")
-            except Exception as e:
-                print(f"An error occurred while processing a batch: {e}")
-            finally:
-                tasks.clear()  # Clear the list for the next batch, regardless of success or failure
+#         if len(tasks) >= batch_size:
+#             try:
+#                 print(f"Executing batch of {batch_size} tasks.")
+#                 await asyncio.gather(*tasks)
+#                 print(f"Completed batch of {batch_size} tasks.")
+#             except Exception as e:
+#                 print(f"An error occurred while processing a batch: {e}")
+#             finally:
+#                 tasks.clear()  # Clear the list for the next batch, regardless of success or failure
 
-    # Handle any remaining tasks
-    if tasks:
-        try:
-            print(f"Executing final batch of {len(tasks)} tasks.")
-            await asyncio.gather(*tasks)
-            print("Completed final batch.")
-        except Exception as e:
-            print(f"An error occurred while processing the final batch: {e}")
+#     # Handle any remaining tasks
+#     if tasks:
+#         try:
+#             print(f"Executing final batch of {len(tasks)} tasks.")
+#             await asyncio.gather(*tasks)
+#             print("Completed final batch.")
+#         except Exception as e:
+#             print(f"An error occurred while processing the final batch: {e}")
 
-    print("All tasks completed.")
+#     print("All tasks completed.")
 
-asyncio.run(main())
+# asyncio.run(main())

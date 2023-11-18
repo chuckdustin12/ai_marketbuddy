@@ -1,5 +1,5 @@
-from fudstop.apis.webull.webull_trading import WebullTrading
-from fudstop.list_sets.ticker_lists import most_active_tickers
+from apis.webull.webull_trading import WebullTrading
+from list_sets.ticker_lists import most_active_tickers
 most_active_tickers = set(most_active_tickers)
 
 trading = WebullTrading()

@@ -25,13 +25,13 @@ from datetime import datetime, timedelta
 import aiohttp
 
 from urllib.parse import urlencode
-
-from fudstop.apis.helpers import flatten_dict
+import requests
+from apis.helpers import flatten_dict
 
 YOUR_POLYGON_KEY = os.environ.get('YOUR_POLYGON_KEY')
 
 print(YOUR_POLYGON_KEY)
-
+session = requests.session()
 class Polygon:
     def __init__(self, connection_string=None):
         self.connection_string = connection_string
@@ -74,6 +74,48 @@ class Polygon:
                 await conn.execute(query, *data.values())
             except UniqueViolationError:
                 print('Duplicate - SKipping')
+
+    async def fetch_page(self, url):
+        if 'apiKey' not in url:
+            url = url + f"?apiKey={os.environ.get('YOUR_POLYGON_KEY')}"
+        async with aiohttp.ClientSession() as session:
+            async with session.get(url) as response:
+                response.raise_for_status()
+                return await response.json()
+    async def paginate_concurrent(self, url, as_dataframe=False, concurrency=25):
+        all_results = []
+
+        
+        async with aiohttp.ClientSession() as session:
+            pages_to_fetch = [url]
+            
+            while pages_to_fetch:
+                tasks = []
+                
+                for _ in range(min(concurrency, len(pages_to_fetch))):
+                    next_url = pages_to_fetch.pop(0)
+                    tasks.append(self.fetch_page(next_url))
+                    
+                results = await asyncio.gather(*tasks)
+                if results is not None:
+                    for data in results:
+                        if data is not None:
+                            if "results" in data:
+                                all_results.extend(data["results"])
+                                
+                            next_url = data.get("next_url")
+                            if next_url:
+                                next_url += f'&{urlencode({"apiKey": f"{self.api_key}"})}'
+                                pages_to_fetch.append(next_url)
+                        else:
+                            break
+        if as_dataframe:
+            import pandas as pd
+            return pd.DataFrame(all_results)
+        else:
+            return all_results
+        
+
 
     async def fetch_endpoint(self, endpoint, params=None):
         # Build the query parameters
@@ -131,7 +173,7 @@ class Polygon:
         Example:
         >>> await aggregates('AAPL', date_from='2023-09-01', date_to='2023-10-01')
         """
-        
+
         if date_from is None:
             date_from = (datetime.now() - timedelta(days=30)).strftime('%Y-%m-%d')
         
@@ -147,10 +189,15 @@ class Polygon:
         }
 
         endpoint = f"https://api.polygon.io/v2/aggs/ticker/{ticker}/range/{multiplier}/{timespan}/{date_from}/{date_to}"
-        
+        if limit == 50000:
+            all_data = await self.paginate_concurrent(endpoint)
+            return all_data    
         data = await self.fetch_endpoint(endpoint, params=params)
         data = AggregatesData(data)
-        
+
+        if limit == 50000:
+            all_data = await self.paginate_concurrent(endpoint)
+            return all_data    
         return data
 
 
@@ -217,6 +264,44 @@ class Polygon:
                     )
                 else:
                     print(f'Couldnt get info for {ticker}')
+    def company_info_sync(self, ticker) -> CombinedCompanyResults:
+        url = f"https://api.polygon.io/v3/reference/tickers/{ticker}?apiKey={self.api_key}"
+        data = session.get(url).json()
+        results_data = data['results'] if 'results' in data else None
+        if results_data is not None:
+            return CombinedCompanyResults(
+                ticker=results_data.get('ticker'),
+                name=results_data.get('name'),
+                market=results_data.get('market'),
+                locale=results_data.get('locale'),
+                primary_exchange=results_data.get('primary_exchange'),
+                type=results_data.get('type'),
+                active=results_data.get('active'),
+                currency_name=results_data.get('currency_name'),
+                cik=results_data.get('cik'),
+                composite_figi=results_data.get('composite_figi'),
+                share_class_figi=results_data.get('share_class_figi'),
+                market_cap=results_data.get('market_cap'),
+                phone_number=results_data.get('phone_number'),
+                description=results_data.get('description'),
+                sic_code=results_data.get('sic_code'),
+                sic_description=results_data.get('sic_description'),
+                ticker_root=results_data.get('ticker_root'),
+                homepage_url=results_data.get('homepage_url'),
+                total_employees=results_data.get('total_employees'),
+                list_date=results_data.get('list_date'),
+                share_class_shares_outstanding=results_data.get('share_class_shares_outstanding'),
+                weighted_shares_outstanding=results_data.get('weighted_shares_outstanding'),
+                round_lot=results_data.get('round_lot'),
+                address1=results_data.get('address', {}).get('address1'),
+                city=results_data.get('address', {}).get('city'),
+                state=results_data.get('address', {}).get('state'),
+                postal_code=results_data.get('address', {}).get('postal_code'),
+                logo_url=results_data.get('branding', {}).get('logo_url'),
+                icon_url=results_data.get('branding', {}).get('icon_url')
+            )
+        else:
+            print(f'Couldnt get info for {ticker}')
 
     async def get_all_tickers(self, include_otc=False, save_all_tickers:bool=False) -> List[StockSnapshot]:
         """

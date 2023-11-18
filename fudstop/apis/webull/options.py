@@ -7,11 +7,11 @@ if project_dir not in sys.path:
     sys.path.append(project_dir)
 
 import pandas as pd
-from webull_helpers import flatten_list_of_dicts, flatten_dict
+from .webull_helpers import flatten_list_of_dicts, flatten_dict
 
 class WebullOptionsData:
     def __init__(self, data):
-
+        self.as_dataframe = None
       # Initialize the remaining attributes
         self.expireDate = [i.get('expireDate') for i in data] if isinstance(data, list) else data.get('expireDate')
         self.tickerId = [i.get('tickerId') for i in data] if isinstance(data, list) else data.get('tickerId')
@@ -27,18 +27,14 @@ class WebullOptionsData:
         self.open = [i.get('open') for i in data]
         self.high = [i.get('high') for i in data]
         self.low = [i.get('low') for i in data]
-        self.close = [i.get('close') for i in data]
-        self.low = [float(item.get('low')) if isinstance(item.get('low'), (int, float)) else None for item in data] if isinstance(data, list) else float(data.get('low')) if isinstance(data.get('low'), (int, float)) else None
-
-        self.close = [float(item.get('close')) if isinstance(item.get('close'), (int, float)) else None for item in data] if isinstance(data, list) else float(data.get('close')) if isinstance(data.get('close'), (int, float)) else None
-
+        self.close =  [i.get('close') for i in data]
         self.preClose = [float(item.get('preClose')) if isinstance(item.get('preClose'), (int, float)) else None for item in data] if isinstance(data, list) else float(data.get('preClose')) if isinstance(data.get('preClose'), (int, float)) else None
 
         self.change = [float(item.get('change')) if isinstance(item.get('change'), (int, float)) else None for item in data] if isinstance(data, list) else float(data.get('change')) if isinstance(data.get('change'), (int, float)) else None
 
         self.changeRatio = [round(float(item.get('changeRatio')) * 100, 2) if isinstance(item.get('changeRatio'), (int, float)) else None for item in data] if isinstance(data, list) else round(float(data.get('changeRatio')) * 100, 2) if isinstance(data.get('changeRatio'), (int, float)) else None
 
-        self.volume = [float(i.get('volume')) if i.get('volume') is not None else None for i in data]
+        self.volume = [i.get('volume') for i in data]
 
 
         self.latestPriceVol = [float(item.get('latestPriceVol')) if isinstance(item.get('latestPriceVol'), (int, float)) else None for item in data] if isinstance(data, list) else float(data.get('latestPriceVol')) if isinstance(data.get('latestPriceVol'), (int, float)) else None
@@ -63,16 +59,16 @@ class WebullOptionsData:
 
         self.askList = [i.get('askList', None) for i in data] if isinstance(data, list) else data.get('askList', None)
         self.bidList = [i.get('bidList', None) for i in data] if isinstance(data, list) else data.get('bidList', None)
-        self.bidPrice = [float(bid.get('price')) for sublist in self.bidList if sublist for bid in sublist if bid and bid.get('price') is not None]
+        self.bidPrice = [i[0].get('price') for i in self.bidList if i and i[0] is not None]
 
   
-        self.askPrice = [float(ask.get('price')) for sublist in self.askList if sublist for ask in sublist if ask and ask.get('price') is not None]
-        self.bidVolume = [float(bid.get('volume')) for sublist in self.bidList if sublist for bid in sublist if bid and bid.get('volume') is not None]
-        self.askVolume = [float(ask.get('volume')) for sublist in self.askList if sublist for ask in sublist if ask and ask.get('volume') is not None]
-        self.bidExchange = [bid.get('quoteEx') for sublist in self.bidList if sublist for bid in sublist if bid]
-        self.askExchange = [ask.get('quoteEx') for sublist in self.askList if sublist for ask in sublist if ask]
+        self.askPrice = [i[0].get('price') for i in self.askList if i and i[0] is not None]
+        self.bidVolume = [i[0].get('volume') for i in self.bidList if i and i[0] is not None]
+        self.askVolume = [i[0].get('volume') for i in self.askList if i and i[0] is not None]
+        self.bidExchange = [i[0].get('quoteEx') for i in self.bidList if i and i[0] is not None]
+        self.askExchange = [i[0].get('quoteEx') for i in self.askList if i and i[0] is not None]
 
-        print(self.bidPrice)
+     
         self.data_dict = { 
             'strike_price': self.strikePrice,
             'call_put': self.direction,

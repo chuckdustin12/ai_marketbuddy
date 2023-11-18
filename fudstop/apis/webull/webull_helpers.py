@@ -181,6 +181,51 @@ def parse_forex(ticker_list):
     return parsed_data_list
 
 
+
+# Creating a function to parse each attribute of the data_entry and return it as a dictionary
+def parse_ticker_values_sync(data_entry):
+    all_parsed_data = []
+    data_entry = data_entry.get('data', {})
+    for data in data_entry:
+        parsed_data = {}
+        ticker_info = data.get('ticker', {})
+        for key, value in ticker_info.items():
+            if type(key) != list and key != 'secType' and key != 'derivativeSupport':
+                parsed_data[f'{key}'] = value
+    
+        # Parsing 'values' attributes
+        values_info = data.get('values', {})
+        for key, value in values_info.items():
+            if type(key) != list and key != 'secType' and key != 'derivativeSupport':
+                parsed_data[f'{key}'] = value
+        
+        all_parsed_data.append(parsed_data)
+    return all_parsed_data
+
+
+def parse_forex(ticker_list):
+    parsed_data_list = []
+    
+    for ticker_entry in ticker_list:
+        parsed_data = {}
+        
+        parsed_data['tickerId'] = ticker_entry.get('tickerId')
+        parsed_data['exchangeId'] = ticker_entry.get('exchangeId')
+        
+        parsed_data['name'] = ticker_entry.get('name')
+        parsed_data['symbol'] = ticker_entry.get('symbol')
+        parsed_data['disSymbol'] = ticker_entry.get('disSymbol')
+        parsed_data['status'] = ticker_entry.get('status')
+        parsed_data['close'] = ticker_entry.get('close')
+        parsed_data['change'] = ticker_entry.get('change')
+        parsed_data['changeRatio'] = ticker_entry.get('changeRatio')
+        parsed_data['marketValue'] = ticker_entry.get('marketValue')
+        
+        parsed_data_list.append(parsed_data)
+    
+    return parsed_data_list
+
+
 async def parse_etfs(response):
     flattened_data = []
     

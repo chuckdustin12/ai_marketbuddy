@@ -7,7 +7,7 @@ if project_dir not in sys.path:
     sys.path.append(project_dir)
 
 
-from fudstop.apis.stocksera_.stocksera_ import StockSera
+from apis.stocksera_.stocksera_ import StockSera
 
 ss = StockSera()
 

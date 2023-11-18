@@ -1,6 +1,6 @@
 import asyncio
-from fudstop.apis.polygonio.async_polygon_sdk import Polygon
-from fudstop.list_sets.ticker_lists import most_active_tickers
+from apis.polygonio.async_polygon_sdk import Polygon
+from list_sets.ticker_lists import most_active_tickers
 polygon = Polygon()
 async def get_2_4_8_rsi(ticker, timespan, window):
     windows_thresholds = {

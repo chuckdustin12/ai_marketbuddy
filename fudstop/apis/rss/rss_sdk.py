@@ -235,7 +235,8 @@ class RSSSDK:
                                 
 
                                         # Print the cleaned DataFrame
-                                        print(df.transpose())                                    
+                                        print(df.transpose())          
+                                        return df                          
 
                         else:
                             if document_link.endswith('xml'):

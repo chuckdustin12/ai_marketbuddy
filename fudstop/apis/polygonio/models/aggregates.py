@@ -13,11 +13,11 @@ from typing import List
 class AggregatesData:
     def __init__(self, response_data):
         ticker: str
-        Open: float
-        High: float
-        Low: float
-        Close: float
-        Timestamp: str
+        open: float
+        high: float
+        low: float
+        close: float
+        timestamp: str
 
     
         utc_tz = pytz.timezone('UTC')

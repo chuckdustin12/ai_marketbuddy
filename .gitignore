@@ -1,10 +1,14 @@
 .env
 data/
+whisper.py
+__pycache__
 __pycache__/*
 tmp/
 web/
 data/
 .cache/
+update_fudstop.py
+environment.yml
 .env
 dist/
 build/
@@ -17,3 +21,4 @@ qfpewfoewk.py
 app.py
 templates/
 waitress_server
+dump/

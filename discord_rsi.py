@@ -2,12 +2,12 @@ import os
 from dotenv import load_dotenv
 load_dotenv()
 import asyncio
-from fudstop.apis.webull.webull_trading import WebullTrading
-from fudstop.apis.webull.webull_helpers import calculate_countdown,calculate_setup
+from apis.webull.webull_trading import WebullTrading
+from apis.webull.webull_helpers import calculate_countdown,calculate_setup
 from discord_webhook import AsyncDiscordWebhook,DiscordEmbed
-from fudstop.apis.polygonio.async_polygon_sdk import Polygon
-from fudstop.list_sets.dicts import hex_color_dict
-from fudstop.list_sets.ticker_lists import most_active_tickers
+from apis.polygonio.async_polygon_sdk import Polygon
+from list_sets.dicts import hex_color_dict
+from list_sets.ticker_lists import most_active_tickers
 from discord_webhook import AsyncDiscordWebhook
 from aiohttp.client_exceptions import ClientConnectorError, ClientOSError
 import httpx

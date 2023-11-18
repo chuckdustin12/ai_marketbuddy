@@ -1,9 +1,9 @@
 import os
 from dotenv import load_dotenv
-from fudstop.apis.helpers import get_human_readable_string
+from apis.helpers import get_human_readable_string
 load_dotenv()
 
-from fudstop.apis.webull.webull_options import WebullOptions
+from apis.webull.webull_options import WebullOptions
 import pandas as pd
 options = WebullOptions(connection_string=os.environ.get('WEBULL_OPTIONS'))
 import asyncio

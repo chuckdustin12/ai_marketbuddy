@@ -11,7 +11,7 @@ import aiohttp
 import asyncio
 import os
 
-from fudstop.apis.misc.models.weather_models import WeatherLocation
+from apis.misc.models.weather_models import WeatherLocation
 
 API_KEY = os.environ.get('YOUR_WEATHER_KEY')
 

@@ -7,7 +7,7 @@ from disnake import TextInput,TextInputStyle
 import pandas as pd
 from datetime import datetime
 from tabulate import tabulate
-from webull_options import WebullOptions 
+from .webull_options import WebullOptions 
 
 
 options = WebullOptions(os.environ.get('WEBULL_OPTIONS'))

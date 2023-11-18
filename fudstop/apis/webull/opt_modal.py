@@ -5,7 +5,7 @@ load_dotenv()
 
 import asyncio
 from datetime import datetime
-from fudstop.apis.webull.webull_options import WebullOptions
+from apis.webull.webull_options import WebullOptions
 
 options = WebullOptions(os.environ.get('WEBULL_OPTIONS'))
 

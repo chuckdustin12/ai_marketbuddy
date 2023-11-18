@@ -14,5 +14,5 @@ async def main():
 
     x = await register.query_document('options')
 
-    print(x.as_dataframe)
+    print(x.data_dict)
 asyncio.run(main())

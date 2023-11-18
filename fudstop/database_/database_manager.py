@@ -35,7 +35,7 @@ db_config_charlie = {
 db_options_chat_config =  { 
     "host": os.environ.get('DB_HOST'), # Default to this IP if 'DB_HOST' not found in environment variables
     "port": int(os.environ.get('DB_PORT')), # Default to 5432 if 'DB_PORT' not found
-    "user": 'chuck', # Default to 'postgres' if 'DB_USER' not found
+    "user": os.environ.get('DB_USER', 'chuck'), # Default to 'postgres' if 'DB_USER' not found
     "password": os.environ.get('DB_PASSWORD'), # Use the password from environment variable or default
     "database": "POLYGON" # Database name for the new jawless database
 }

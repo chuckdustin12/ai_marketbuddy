@@ -7,7 +7,7 @@ if project_dir not in sys.path:
     sys.path.append(project_dir)
 
 from polygon.websocket import WebSocketMessage
-from fudstop.apis.helpers import convert_to_ns_datetime
+from apis.helpers import convert_to_ns_datetime
 import asyncio
 from typing import List
 from list_sets import indices_names_and_symbols_dict

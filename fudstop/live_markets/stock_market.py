@@ -3,10 +3,10 @@ from dotenv import load_dotenv
 
 load_dotenv()
 import random
-from fudstop.apis.helpers import map_stock_conditions, STOCK_EXCHANGES, stock_condition_dict, TAPES
-from fudstop.apis.helpers import format_large_number, convert_to_ns_datetime
-from fudstop.apis.polygonio.async_polygon_sdk import Polygon
-from fudstop.list_sets.ticker_lists import most_active_tickers
+from apis.helpers import map_stock_conditions, STOCK_EXCHANGES, stock_condition_dict, TAPES
+from apis.helpers import format_large_number, convert_to_ns_datetime
+from apis.polygonio.async_polygon_sdk import Polygon
+from list_sets.ticker_lists import most_active_tickers
 from polygon.websocket import WebSocketClient, EquityTrade  
 from polygon.websocket.models import WebSocketMessage
 from typing import List

@@ -51,12 +51,12 @@ class GroupedAggsModel:
                 INSERT INTO daily_aggregates (T, V, VW, O, C, H, L, N, Timestamp) VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9)
             """, row['T'], row['v'], row['vw'], row['o'], row['c'], row['h'], row['l'], row['n'], row['timestamp'])
 
-aggs_model = GroupedAggsModel()
-loop = asyncio.get_event_loop()
-connection = loop.run_until_complete(asyncpg.connect(user=os.environ.get('DB_USER'), password=os.environ.get('DB_PASSWORD'), database='polygon', host=os.environ.get('DB_HOST')))
-loop.run_until_complete(aggs_model.create_table(connection))
-df = loop.run_until_complete(aggs_model.fetch_stock_data())
-loop.run_until_complete(aggs_model.insert_data(connection, df))
+# aggs_model = GroupedAggsModel()
+# loop = asyncio.get_event_loop()
+# connection = loop.run_until_complete(asyncpg.connect(user=os.environ.get('DB_USER'), password=os.environ.get('DB_PASSWORD'), database='polygon', host=os.environ.get('DB_HOST')))
+# loop.run_until_complete(aggs_model.create_table(connection))
+# df = loop.run_until_complete(aggs_model.fetch_stock_data())
+# loop.run_until_complete(aggs_model.insert_data(connection, df))
 
-##############################
+# ##############################
 

@@ -8,8 +8,8 @@ from langchain.prompts import (
     HumanMessagePromptTemplate,
 )
 from langchain.chains import LLMChain
-from fudstop.apis.webull.webull_trading import WebullTrading
-from fudstop.apis.stocksera_.stocksera_ import StockSera
+from apis.webull.webull_trading import WebullTrading
+from apis.stocksera_.stocksera_ import StockSera
 trading = WebullTrading()
 ss = StockSera()
 import asyncio

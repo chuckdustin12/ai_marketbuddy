@@ -1,6 +1,6 @@
-from fudstop.apis.helpers import convert_to_datetime
+from apis.helpers import convert_to_datetime
 from ..weather_helpers import kelvin_to_temp
-from fudstop.apis.helpers import flatten_list_of_dicts
+from apis.helpers import flatten_list_of_dicts
 
 import pandas as pd
 class WeatherLocation:

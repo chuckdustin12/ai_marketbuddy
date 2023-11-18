@@ -4,8 +4,8 @@ import os
 import pandas as pd
 
 from typing import List
-from fudstop.apis.fed_print.models import Series, Search, Item, SingleItem
 
+from .fedprint_models import Series, Search, Item, SingleItem
 
 class FedPrint:
     """

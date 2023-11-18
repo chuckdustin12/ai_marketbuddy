@@ -1,6 +1,6 @@
 import pandas as pd
 from datetime import datetime, timedelta
-from fudstop.apis.polygonio.mapping import option_condition_desc_dict,OPTIONS_EXCHANGES
+from apis.polygonio.mapping import option_condition_desc_dict,OPTIONS_EXCHANGES
 indices_list = ["SPX", "SPXW", "NDX", "VIX", "VVIX"]
 
 

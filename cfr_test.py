@@ -1,8 +1,8 @@
-from fudstop.apis.webull.webull_trading import WebullTrading
-from fudstop.apis.polygonio.async_polygon_sdk import Polygon
-from fudstop.list_sets.ticker_lists import most_active_tickers
-from fudstop.apis.stocksera_.stocksera_ import StockSera
-from fudstop.apis.cfr.cfr_sdk import CFRManager
+from apis.webull.webull_trading import WebullTrading
+from apis.polygonio.async_polygon_sdk import Polygon
+from list_sets.ticker_lists import most_active_tickers
+from apis.stocksera_.stocksera_ import StockSera
+from apis.cfr.cfr_sdk import CFRManager
 
 
 import asyncio

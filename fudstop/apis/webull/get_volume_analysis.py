@@ -2,8 +2,8 @@ import os
 from dotenv import load_dotenv
 load_dotenv()
 
-from fudstop.apis.webull.webull_options import WebullOptions
-from fudstop.apis.helpers import get_human_readable_string, rename_keys
+from apis.webull.webull_options import WebullOptions
+from apis.helpers import get_human_readable_string, rename_keys
 import asyncpg
 
 

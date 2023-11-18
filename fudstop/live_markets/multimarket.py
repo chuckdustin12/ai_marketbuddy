@@ -19,7 +19,7 @@ from polygon.websocket import WebSocketClient
 #import configuration, helpers, and conversion mappings
 from market_handlers.cfg import hex_colors
 from market_handlers.list_sets import CRYPTO_DESCRIPTIONS,CRYPTO_HOOKS
-from fudstop.apis.polygonio.mapping import stock_condition_dict, option_condition_dict, OPTIONS_EXCHANGES
+from apis.polygonio.mapping import stock_condition_dict, option_condition_dict, OPTIONS_EXCHANGES
 
 
 #import message handlers
@@ -30,7 +30,7 @@ from market_handlers.options import handle_option_msg
 #from market_handlers.indices import indices_handler
 
 #import the most active tickers
-from fudstop.list_sets.ticker_lists import most_active_tickers
+from list_sets.ticker_lists import most_active_tickers
 #ensure no duplicates exist
 most_active_tickers = set(most_active_tickers)
 
@@ -72,19 +72,19 @@ equity_option_agg_deque = deque(maxlen=250)
 
 
 #import scripts
-from fudstop.scripts.universal_snapshot import get_universal_snapshot
+from scripts.universal_snapshot import get_universal_snapshot
 
 
 
 #import sdk kits for streamlined data analysis / processing
-from fudstop.apis.discord_.discord_sdk import DiscordSDK
-from fudstop.apis.stocksera_.stocksera_ import StockSera
-from fudstop.apis.nasdaq.nasdaq_sdk import Nasdaq
-from fudstop.apis.webull.webull_markets import WebullMarkets
-from fudstop.apis.webull.webull_trading import WebullTrading
-from fudstop.apis.polygonio.async_polygon_sdk import Polygon
-from fudstop.apis.newyork_fed.newyork_fed_sdk import FedNewyork
-from fudstop.apis.ofr.ofr_sdk import OFR
+from apis.discord_.discord_sdk import DiscordSDK
+from apis.stocksera_.stocksera_ import StockSera
+from apis.nasdaq.nasdaq_sdk import Nasdaq
+from apis.webull.webull_markets import WebullMarkets
+from apis.webull.webull_trading import WebullTrading
+from apis.polygonio.async_polygon_sdk import Polygon
+from apis.newyork_fed.newyork_fed_sdk import FedNewyork
+from apis.ofr.ofr_sdk import OFR
 
 
 

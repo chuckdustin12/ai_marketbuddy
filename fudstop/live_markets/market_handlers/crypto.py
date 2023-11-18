@@ -5,12 +5,12 @@ from discord_webhook import AsyncDiscordWebhook, DiscordEmbed
 import asyncio
 
 
-from fudstop.apis.polygonio.mapping import OPTIONS_EXCHANGES, option_condition_desc_dict, option_condition_dict
+from apis.polygonio.mapping import OPTIONS_EXCHANGES, option_condition_desc_dict, option_condition_dict
 from datetime import datetime
 from math import isnan
 from asyncio import Queue
 from datetime import timezone
-from fudstop.apis.helpers import calculate_price_to_strike, calculate_days_to_expiry, format_large_number, format_large_numbers_in_dataframe,format_large_numbers_in_dict, get_human_readable_string
+from apis.helpers import calculate_price_to_strike, calculate_days_to_expiry, format_large_number, format_large_numbers_in_dataframe,format_large_numbers_in_dict, get_human_readable_string
 import requests
 import asyncpg
 batch_data_aggs = []
@@ -18,7 +18,7 @@ batch_data_trades = []
 
 
 from pytz import timezone
-from fudstop.apis.helpers import convert_to_ns_datetime
+from apis.helpers import convert_to_ns_datetime
 utc = timezone('UTC')
 aware_datetime = utc.localize(datetime.utcnow())
 from .list_sets import crypto_conditions_dict, crypto_exchanges
